@@ -1,0 +1,5 @@
+export default {
+    SHOT_TIMEOUT: 400,
+    PLAYER_VELOCITY: 200,
+    BULLET_VELOCITY: 600
+}
