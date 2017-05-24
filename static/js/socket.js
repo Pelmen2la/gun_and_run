@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 var socket;
 
 function init(handlers, callback) {
-    socket = io('http://localhost:8100');
+    socket = io(window.location.origin + ':8100');
     socket.on('connect', function() {
         socket.on('roomData', function(data) {
             handlers.onRoomData(data);
