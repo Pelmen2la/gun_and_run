@@ -90,7 +90,7 @@ function getMobileStickMoveDirection() {
         ignoreX = angle > 70,
         ignoreY = angle < 20,
         isDiagonal = !ignoreX && !ignoreY;
-    if(isTop && ignoreY) {
+    if(isTop && ignoreX) {
         return 'up';
     } else if(isTop && !isLeft && isDiagonal) {
         return 'upright';
