@@ -1,24 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="{{IS_MOBILE_CLASS}}">
 <head>
     <title>Gun_and_run</title>
-    <style type="text/css">
-        body {
-            overflow: hidden;
-        }
-        .player-info-panel {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-        }
-    </style>
 </head>
 <body>
 <div class="player-info-panel">
     <span id="PlayerHpLabel"></span><br>
     <span id="PlayerScoreLabel"></span>
 </div>
-
+<div id="MobileStick" class="mobile-control-stick">
+    <img class="main-circle" src="/images/icons/circle.svg">
+    <img id="MobileStickPointer" class="main-circle-pointer" src="/images/icons/circle_pointer.svg">
+</div>
 <script src="/dist/js/app.js"></script>
 </body>
 </html>

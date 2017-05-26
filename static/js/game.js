@@ -6,8 +6,9 @@ import socket from './socket.js'
 import spritesFactory from './spritesFactory.js'
 import map from './map.js'
 import consts from './consts.js';
+import controls from './controls.js';
 
-var gameData = {}, cursors,
+var gameData = {},
     game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', {
         preload: preload,
         create: create,
@@ -23,8 +24,7 @@ function preload() {
 };
 
 function create() {
-    cursors = game.input.keyboard.createCursorKeys();
-    game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = onSpacebarPress;
+    controls.init(getControlsHandlers());
     socket.init(getSocketHandlers(), function() {
         socket.emit('joinRoom');
     });
@@ -60,7 +60,13 @@ function initData(data) {
     game.camera.follow(gameData.player);
 };
 
-function onSpacebarPress() {
+function getControlsHandlers() {
+    var handlers = {};
+    handlers['onShotButtonPress'] = onShotButtonPress;
+    return handlers;
+};
+
+function onShotButtonPress() {
     if(Date.now() - (gameData.player.lastShotTime || 0) > consts.SHOT_TIMEOUT) {
         shot()
     }
@@ -121,26 +127,10 @@ function sendPlayerInfo() {
 function updatePlayerPosition() {
     var player = gameData.player,
         body = player.body,
-        moveDirection = null;
+        moveDirection = controls.getMoveDirection();
     game.physics.arcade.collide(player, map.getWallGroup());
     body.velocity = {x: 0, y: 0};
-    if(cursors.up.isDown && cursors.left.isDown) {
-        moveDirection = 'upleft';
-    } else if(cursors.up.isDown && cursors.right.isDown) {
-        moveDirection = 'upright';
-    } else if(cursors.down.isDown && cursors.left.isDown) {
-        moveDirection = 'downleft';
-    } else if(cursors.down.isDown && cursors.right.isDown) {
-        moveDirection = 'downright';
-    } else if(cursors.up.isDown) {
-        moveDirection = 'up';
-    } else if(cursors.left.isDown) {
-        moveDirection = 'left';
-    } else if(cursors.right.isDown) {
-        moveDirection = 'right';
-    } else if(cursors.down.isDown) {
-        moveDirection = 'down';
-    }
+
     spritesFactory.updatePlayerSprite(player, moveDirection);
 };
 

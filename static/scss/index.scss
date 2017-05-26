@@ -1,0 +1,29 @@
+body {
+    overflow: hidden;
+}
+
+.player-info-panel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+}
+
+.mobile-control-stick {
+    height: 30%;
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+
+    img {
+        &.main-circle {
+            height: 100%;
+        }
+
+        &.main-circle-pointer {
+            top: 30%;
+            left: 30%;
+            height: 40%;
+            position: absolute;
+        }
+    }
+}
