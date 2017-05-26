@@ -3,19 +3,32 @@ import touchPosition from 'touch-position';
 import touch from 'touches';
 
 var cursors = {},
-    touchEmitter = touchPosition.emitter({ element: getMobileStick() }),
     mobileStickDirection = '';
 
 function init(handlers) {
     cursors = game.instance.input.keyboard.createCursorKeys();
     game.instance.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
     initMobileStick();
+    initMobileShotButton(handlers.onShotButtonPress);
+};
+
+function initMobileShotButton(shotFn) {
+    var mobileShotButton = document.getElementById('MobileShotButton'),
+        buttonTouch = touch(mobileShotButton),
+        mobileShotTimeoutId = null;
+    buttonTouch.on('start', function() {
+        mobileShotTimeoutId = window.setInterval(shotFn, 50);
+    });
+    buttonTouch.on('end', function() {
+        window.clearInterval(mobileShotTimeoutId);
+    });
 };
 
 function initMobileStick() {
-    var mobileStick = getMobileStick();
+    var mobileStick = getMobileStick(),
+        emitter = touchPosition.emitter({ element: mobileStick });
 
-    touchEmitter.on('move', function(e) {
+    emitter.on('move', function(e) {
         ensureMobileStickPointerPosition({ x: e.clientX, y: e.clientY });
     });
     touch(mobileStick).on('end', function() {
