@@ -42,7 +42,7 @@ function update() {
                 targetId: player.data.id,
                 ownerId: bullet.data.ownerId
             });
-            window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
+            bullet.data.ownerId !== player.data.id && window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
         });
     }
 };
@@ -68,7 +68,7 @@ function getControlsHandlers() {
 
 function onShotButtonPress() {
     if(Date.now() - (gameData.player.lastShotTime || 0) > consts.SHOT_TIMEOUT) {
-        shot()
+        shot();
     }
 };
 
@@ -98,6 +98,8 @@ function getSocketHandlers() {
             if(player) {
                 player.x = data.position.x;
                 player.y = data.position.y;
+                player.id === gameData.player.id && socket.emit('respawnComplete',
+                    { roomId: gameData.roomId, playerId: gameData.player.id });
             }
         },
         onScore: function(score) {
@@ -115,7 +117,7 @@ function sendPlayerInfo() {
     var player = gameData.player;
     socket.emit('playerInfo', {
         roomId: gameData.roomId,
-        id: player.data.id,
+        playerId: player.data.id,
         positionInfo: {
             x: player.x,
             y: player.y,

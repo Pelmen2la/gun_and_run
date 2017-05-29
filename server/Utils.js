@@ -26,9 +26,14 @@ function forEachEntryInObject(o, callback) {
     }
 };
 
+function getNowTime() {
+    return new Date().getTime();
+}
+
 module.exports = {
     getUid: getUid,
     getGuid: getGuid,
     getRandomInt: getRandomInt,
+    getNowTime: getNowTime,
     forEachEntryInObject: forEachEntryInObject
 };

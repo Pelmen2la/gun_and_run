@@ -1,3 +1,5 @@
+var UPDATE_INTERVAL = 100;
+
 var io = require('socket.io').listen(8100),
     utils = require('./Utils'),
     dataHelper = require('./DataHelper.js'),
@@ -12,8 +14,9 @@ module.exports = function(app) {
         socket.on('shot', onSocketShot);
         socket.on('playerInfo', onSocketPlayerInfo);
         socket.on('hit', onSocketHit);
+        socket.on('respawnComplete', onSocketRespawnComplete);
     });
-    setInterval(sendRoomsStateToPlayers, 100);
+    setInterval(processRoomsState, UPDATE_INTERVAL);
 };
 
 function onSocketJoinRoom(socket) {
@@ -29,17 +32,15 @@ function onSocketJoinRoom(socket) {
 };
 
 function onSocketPlayerInfo(data) {
-    var room = roomsCache[data.roomId],
-        player = room ? room.players[data.id] : null;
+    var player = getPlayerBySocketData(data);
     if(player) {
-        ['positionInfo'].forEach(function(propName) {
-            player[propName] = data[propName];
-        });
+        !player.idDead && (player.positionInfo = data.positionInfo);
+        player.lastUpdateTime = utils.getNowTime();
     }
 };
 
 function onSocketHit(data) {
-    var room = roomsCache[data.roomId],
+    var room = getRoomBySocketData(data),
         owner = room ? room.players[data.ownerId] : null,
         target = room ? room.players[data.targetId] : null,
         bulletDamage = 50;
@@ -50,6 +51,7 @@ function onSocketHit(data) {
             target.positionInfo.x = position.x;
             target.positionInfo.y = position.y;
             target.hp = 100;
+            target.idDead = true;
             owner.score += 1;
             io.sockets.in(data.roomId).emit('respawn', {
                 playerId: target.id,
@@ -63,27 +65,42 @@ function onSocketHit(data) {
 };
 
 function onSocketShot(data) {
-    var roomId = data.roomId,
-        room = roomsCache[roomId];
-    if(room) {
+    if(getRoomBySocketData(data)) {
         delete data.roomId;
-        data.time = new Date().getTime();
-        io.sockets.in(roomId).emit('shot', data);
+        data.time = utils.getNowTime();
+        io.sockets.in(data.roomId).emit('shot', data);
     }
+};
+
+function onSocketRespawnComplete(data) {
+    var player = getPlayerBySocketData(data);
+    player && (player.isDead = false);
+};
+
+function getRoomBySocketData(data) {
+    return getRoom(data.roomId);
 };
 
 function getRoom(roomId) {
+    return roomsCache[roomId] || null;
+};
+
+function getPlayerBySocketData(data) {
+    return getPlayer(data.roomId, data.playerId);
 };
 
 function getPlayer(roomId, playerId) {
-    var room = roomsCache[data.roomId],
-        player = room ? room.players[data.targetId] : null;
-    if(player) {
-    }
+    var room = getRoom(roomId);
+    return room ? room.players[playerId] : null;
 };
 
-function sendRoomsStateToPlayers() {
+function processRoomsState() {
     utils.forEachEntryInObject(roomsCache, function(roomId, room) {
+        utils.forEachEntryInObject(room.players, function(player) {
+            if(utils.getNowTime() - player.lastUpdateTime || 0 > UPDATE_INTERVAL * 2) {
+                player.positionInfo.moveDirection = '';
+            }
+        });
         io.sockets.in(roomId).emit('playersData', room.players);
     });
 };
@@ -109,10 +126,12 @@ function getNewPlayer(position, socketId) {
         hp: 100,
         score: 0,
         socketId: socketId,
+        lastUpdateTime: utils.getNowTime(),
+        idDead: false,
         positionInfo: {
             x: position.x,
             y: position.y,
-            direction: ''
+            moveDirection: ''
         }
     }
 };
