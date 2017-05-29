@@ -7,6 +7,7 @@ import spritesFactory from './spritesFactory.js'
 import map from './map.js'
 import consts from './consts.js';
 import controls from './controls.js';
+import utils from './../../server/Utils.js'
 
 var gameData = {},
     game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', {
@@ -102,6 +103,9 @@ function getSocketHandlers() {
                     { roomId: gameData.roomId, playerId: gameData.player.id });
             }
         },
+        onPlayerLeave: function(playerId) {
+            removePlayer(playerId);
+        },
         onScore: function(score) {
             gameData.player.data.score = score;
             updatePlayerDataPanel();
@@ -137,27 +141,55 @@ function updatePlayerPosition() {
 };
 
 function updateOtherPlayersPosition(playersData) {
+    var ids = [];
     if(gameData && playersData) {
-        for(var key in playersData) {
-            if(playersData.hasOwnProperty(key) && key !== gameData.player.data.id) {
-                var data = playersData[key],
-                    pos = data.positionInfo;
-                if(!gameData.players[key]) {
-                    gameData.players[key] = spritesFactory.createPlayer(data);
-                    gameData.playersGroup.add(gameData.players[key]);
+        utils.forEachEntryInObject(playersData, function(playerId, playerData) {
+            if(playerId !== gameData.player.data.id) {
+                var pos = playerData.positionInfo;
+                ids.push[playerId];
+                if(!gameData.players[playerId]) {
+                    gameData.players[playerId] = spritesFactory.createPlayer(playerData);
+                    gameData.playersGroup.add(gameData.players[playerId]);
                 }
-                var player = gameData.players[key];
+                var player = gameData.players[playerId];
                 spritesFactory.updatePlayerSprite(player, pos.moveDirection);
                 player.x = pos.x;
                 player.y = pos.y;
             }
+        });
+    }
+    utils.forEachEntryInObject(gameData.players, function(playerId, player) {
+        if(ids.indexOf(playerId) == -1 && gameData.player.data.id !== playerId) {
+            player.kill();
+            delete gameData.players[playerId];
         }
+    });
+};
+
+function removePlayer(playerId) {
+    if(gameData.players[playerId]) {
+        gameData.players[playerId].kill();
+        delete gameData.players[playerId];
     }
 };
 
 function updatePlayerDataPanel() {
-    document.getElementById('PlayerHpLabel').innerHTML = gameData.player.data.hp + ' hp';
+    updatePlayerHpPanel(gameData.player.data.hp);
     document.getElementById('PlayerScoreLabel').innerHTML = gameData.player.data.score + ' points';
+};
+
+function updatePlayerHpPanel(hp) {
+    function getHeartHtml(isSmall) {
+        var cls = isSmall ? 'small' : '';
+        return '<img class="' + cls + '" src="/images/icons/heart.png" />';
+    }
+
+    var hpHeartsHtml = '';
+    for(var i = 0; i < hp / 20; i++) {
+        hpHeartsHtml += getHeartHtml();
+    }
+    hp % 20 && (hpHeartsHtml += getHeartHtml(true));
+    document.getElementById('PlayerHpBar').innerHTML = hpHeartsHtml;
 };
 
 function addShot(data) {

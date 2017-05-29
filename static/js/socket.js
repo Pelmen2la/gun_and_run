@@ -17,6 +17,9 @@ function init(handlers, callback) {
         socket.on('respawn', function(data) {
             handlers.onRespawn(data);
         });
+        socket.on('playerLeave', function(data) {
+            handlers.onPlayerLeave(data);
+        });
         socket.on('score', function(data) {
             handlers.onScore(data);
         });

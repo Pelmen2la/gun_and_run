@@ -1,4 +1,5 @@
-var UPDATE_INTERVAL = 100;
+var UPDATE_INTERVAL = 100,
+    DROP_TIMEOUT = 5000;
 
 var io = require('socket.io').listen(8100),
     utils = require('./Utils'),
@@ -96,9 +97,14 @@ function getPlayer(roomId, playerId) {
 
 function processRoomsState() {
     utils.forEachEntryInObject(roomsCache, function(roomId, room) {
-        utils.forEachEntryInObject(room.players, function(player) {
-            if(utils.getNowTime() - player.lastUpdateTime || 0 > UPDATE_INTERVAL * 2) {
+        utils.forEachEntryInObject(room.players, function(playerId, player) {
+            var timeAfterLastUpdate = utils.getNowTime() - player.lastUpdateTime || 0;
+            if(timeAfterLastUpdate > UPDATE_INTERVAL * 5) {
                 player.positionInfo.moveDirection = '';
+                if(timeAfterLastUpdate > DROP_TIMEOUT) {
+                    delete room.players[playerId];
+                    io.sockets.in(roomId).emit('playerLeave', room.playerId);
+                }
             }
         });
         io.sockets.in(roomId).emit('playersData', room.players);
