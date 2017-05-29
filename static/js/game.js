@@ -141,12 +141,12 @@ function updatePlayerPosition() {
 };
 
 function updateOtherPlayersPosition(playersData) {
-    var ids = [];
+    var ids = {};
     if(gameData && playersData) {
         utils.forEachEntryInObject(playersData, function(playerId, playerData) {
             if(playerId !== gameData.player.data.id) {
                 var pos = playerData.positionInfo;
-                ids.push[playerId];
+                ids[playerId] = true;
                 if(!gameData.players[playerId]) {
                     gameData.players[playerId] = spritesFactory.createPlayer(playerData);
                     gameData.playersGroup.add(gameData.players[playerId]);
@@ -159,7 +159,7 @@ function updateOtherPlayersPosition(playersData) {
         });
     }
     utils.forEachEntryInObject(gameData.players, function(playerId, player) {
-        if(ids.indexOf(playerId) == -1 && gameData.player.data.id !== playerId) {
+        if(!ids[playerId] && gameData.player.data.id !== playerId) {
             player.kill();
             delete gameData.players[playerId];
         }
