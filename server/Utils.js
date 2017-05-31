@@ -28,7 +28,9 @@ function forEachEntryInObject(o, callback) {
 
 function getNowTime() {
     return new Date().getTime();
-}
+};
+
+
 
 module.exports = {
     getUid: getUid,

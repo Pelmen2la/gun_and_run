@@ -16,6 +16,7 @@ module.exports = function(app) {
         socket.on('playerInfo', onSocketPlayerInfo);
         socket.on('hit', onSocketHit);
         socket.on('respawnComplete', onSocketRespawnComplete);
+        socket.on('pickupEnduranceItem', onSocketPickupEnduranceItem);
     });
     setInterval(processRoomsState, UPDATE_INTERVAL);
 };
@@ -46,12 +47,13 @@ function onSocketHit(data) {
         target = room ? room.players[data.targetId] : null,
         bulletDamage = 50;
     if(owner && target) {
-        target.hp -= bulletDamage;
+        processPlayerDamage(target, bulletDamage);
         if(target.hp <= 0) {
             var position = getPlayerSpawnPosition(room);
             target.positionInfo.x = position.x;
             target.positionInfo.y = position.y;
-            target.hp = 100;
+            target.endurance.hp = 100;
+            target.endurance.armor = 0;
             target.idDead = true;
             owner.score += 1;
             io.sockets.in(data.roomId).emit('respawn', {
@@ -60,7 +62,7 @@ function onSocketHit(data) {
             });
             io.sockets.connected[owner.socketId].emit('score', owner.score);
         } else {
-            io.sockets.connected[target.socketId].emit('hp', target.hp);
+            io.sockets.connected[target.socketId].emit('enduranceInfo', target.endurance);
         }
     }
 };
@@ -76,6 +78,19 @@ function onSocketShot(data) {
 function onSocketRespawnComplete(data) {
     var player = getPlayerBySocketData(data);
     player && (player.isDead = false);
+};
+
+function onSocketPickupEnduranceItem(data) {
+    var room = getRoomBySocketData(data),
+        player = getPlayerBySocketData(data),
+        item = room.map.enduranceItems.find((item) => item.uid === data.itemId);
+    if(room && player && item && (!item.lastPickupTime || utils.getNowTime() - item.lastPickupTime > item.respawnTime)) {
+        item.itemType == 'armor' && (player.endurance.armor = 10);
+        item.itemType == 'hp' && (player.endurance.hp = 100);
+        io.sockets.connected[player.socketId].emit('enduranceInfo', player.endurance);
+        item.lastPickupTime = utils.getNowTime();
+        io.sockets.in(room.id).emit('enduranceItemPickuped', { itemId: item.id, time: item.lastPickupTime });
+    }
 };
 
 function getRoomBySocketData(data) {
@@ -111,6 +126,15 @@ function processRoomsState() {
     });
 };
 
+function processPlayerDamage(player, damage) {
+    var hpDamage = damage - player.endurance.armor * 10;
+    hpDamage = hpDamage < 0 ? 0 : hpDamage;
+    player.endurance.hp -= hpDamage;
+    player.endurance.armor -= damage % 10;
+    player.endurance.armor = player.endurance.armor < 0 ? 0 : player.endurance.armor;
+
+};
+
 function emitRoomData(socket, room) {
     socket.emit('roomData', { map: room.map, roomId: room.id, player: addNewPlayerToRoom(socket, room) });
 };
@@ -126,24 +150,8 @@ function createNewRoom(callback) {
     });
 };
 
-function getNewPlayer(position, socketId) {
-    return {
-        id: utils.getUid(),
-        hp: 100,
-        score: 0,
-        socketId: socketId,
-        lastUpdateTime: utils.getNowTime(),
-        idDead: false,
-        positionInfo: {
-            x: position.x,
-            y: position.y,
-            moveDirection: ''
-        }
-    }
-};
-
 function addNewPlayerToRoom(socket, room) {
-    var player = getNewPlayer(getPlayerSpawnPosition(room), socket.id);
+    var player = dataHelper.getNewPlayer(getPlayerSpawnPosition(room), socket.id);
     room.players[player.id] = player;
     socket.join(room.id);
     return player;

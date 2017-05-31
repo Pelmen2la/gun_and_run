@@ -5,26 +5,10 @@ var socket;
 function init(handlers, callback) {
     socket = io(window.location.protocol + '//' + window.location.hostname + ':8100');
     socket.on('connect', function() {
-        socket.on('roomData', function(data) {
-            handlers.onRoomData(data);
-        });
-        socket.on('playersData', function(data) {
-            handlers.onPlayersData(data);
-        });
-        socket.on('shot', function(data) {
-            handlers.onShot(data);
-        });
-        socket.on('respawn', function(data) {
-            handlers.onRespawn(data);
-        });
-        socket.on('playerLeave', function(data) {
-            handlers.onPlayerLeave(data);
-        });
-        socket.on('score', function(data) {
-            handlers.onScore(data);
-        });
-        socket.on('hp', function(data) {
-            handlers.onHp(data);
+        var eventNames = ['roomData', 'playersData', 'shot', 'respawn', 'playerLeave', 'score', 'enduranceInfo', 'enduranceItemPickuped'];
+        eventNames.forEach(function(eventName) {
+            var handlerName= 'on' + eventName[0].toUpperCase() + eventName.substring(1);
+            socket.on(eventName, handlers[handlerName]);
         });
         callback();
     });
@@ -32,7 +16,7 @@ function init(handlers, callback) {
 
 function emit(name, data) {
     return socket.emit(name, data);
-}
+};
 
 export default {
     init: init,

@@ -7,18 +7,26 @@ body {
 .player-info-panel {
     position: fixed;
     top: 20px;
-    left: 20px;
+    right: 20px;
 
     .hp-bar {
         img {
             padding: 0 5px;
             height: 20px;
-            float: left;
 
             &.small {
                 padding-top: 2px;
                 height: 16px;
             }
+        }
+    }
+
+    .armor-panel {
+        float: right;
+        padding: 5px;
+
+        .armor-numbers {
+            text-align: center;
         }
     }
 }

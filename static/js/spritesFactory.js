@@ -1,15 +1,32 @@
 import game from './game.js';
 import consts from './consts.js';
 
+function loadResources() {
+    game.instance.load.spritesheet('beans', 'images/sprites/characters/beans.png', 27, 32);
+    game.instance.load.spritesheet('hp', 'images/sprites/items/hp.png', 32, 32);
+    game.instance.load.spritesheet('armor', 'images/sprites/items/armor.png', 32, 32);
+    game.instance.load.spritesheet('ground', 'images/tiles/ground.png', 32, 32);
+    game.instance.load.spritesheet('wall', 'images/tiles/wall.png', 32, 32);
+    game.instance.load.spritesheet('bullet', 'images/tiles/bullet.png', 5, 5);
+    game.instance.load.spritesheet('blank', 'images/tiles/blank.png', 1, 1);
+};
+
 function getSprite(name, x, y) {
     var sprite = game.instance.add.sprite(x, y, name);
-    sprite.anchor = {x: 0.5, y: 0.5};
     game.instance.physics.arcade.enable(sprite);
     sprite.body.collideWorldBounds = true;
     sprite.body.gravity.y = 0;
     sprite.body.bounce = [0, 0];
-    sprite.enableBody = true;
     return sprite;
+};
+
+function hideSprite(sprite, hideTime) {
+    sprite.alpha = 0;
+    sprite.body.enable = false;
+    window.setTimeout(function() {
+        sprite.alpha = 1;
+        sprite.body.enable = true;
+    }, hideTime);
 };
 
 function getSpriteAnimProps(moveDirection) {
@@ -38,7 +55,7 @@ function createPlayer(data) {
     player.data = {
         id: data.id,
         score: 0,
-        hp: 100
+        endurance: data.endurance
     };
 
     player.animations.add('up', [0, 1, 2, 3], 10, true);
@@ -48,6 +65,18 @@ function createPlayer(data) {
     player.animations.add('down', [12, 13, 14, 15], 10, true);
 
     return player;
+};
+
+function createEnduranceItem(data) {
+    var item = getSprite(data.itemType, data.x, data.y);
+    item.animations.add('rotate', [0, 1, 2, 3, 4, 5, 6, 7], 10, true);
+    item.animations.play('rotate');
+    item.data = {
+        id: data.id,
+        itemType: data.itemType,
+        respawnTime: data.respawnTime
+    };
+    return item;
 };
 
 function updatePlayerSprite(player, moveDirection) {
@@ -100,11 +129,15 @@ function createBulletCore(data, timeDelta) {
     return bullet;
 };
 
+
 export default {
+    loadResources: loadResources,
     getSprite: getSprite,
+    hideSprite: hideSprite,
     getSpriteAnimProps: getSpriteAnimProps,
     createPlayer: createPlayer,
     updatePlayerSprite: updatePlayerSprite,
     updatePlayerDirections: updatePlayerDirections,
-    createBullet: createBullet
+    createBullet: createBullet,
+    createEnduranceItem: createEnduranceItem
 };

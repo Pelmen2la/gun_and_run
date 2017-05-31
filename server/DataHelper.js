@@ -2,7 +2,27 @@ var utils = require('./Utils'),
     mongoose = require('mongoose'),
     Map = mongoose.model('map');
 
-getMapForPlayer = function(callback) {
+function getNewPlayer(position, socketId) {
+    return {
+        id: utils.getUid(),
+
+        score: 0,
+        socketId: socketId,
+        lastUpdateTime: utils.getNowTime(),
+        idDead: false,
+        endurance: {
+            hp: 100,
+            armor: 0
+        },
+        positionInfo: {
+            x: position.x,
+            y: position.y,
+            moveDirection: ''
+        }
+    }
+};
+
+function getMapForPlayer(callback) {
     Map.remove({}, function() {
         Map.findOne({}, function(err, mapData) {
             if(!mapData) {
@@ -16,16 +36,36 @@ getMapForPlayer = function(callback) {
 
 function generateNewMap(callback) {
     var tiles = [],
+        enduranceItems = [],
         tileDimension = 32,
+        bordersWidth = tileDimension * 6,
         xDimension = getRandomDimension(),
-        yDimension = getRandomDimension();
+        yDimension = getRandomDimension(),
+        getBaseTileData = function(x, y) {
+            return {
+                x: bordersWidth + x * tileDimension,
+                y: bordersWidth + y * tileDimension
+            }
+        };
     for(var x = 0; x < xDimension; x++) {
         for(var y = 0; y < yDimension; y++) {
-            tiles.push({
-                x: x * tileDimension,
-                y: y * tileDimension,
-                tileType: Math.random() < 0.05 ? 'wall' : 'ground'
-            });
+            var tile = getBaseTileData(x, y);
+            tile.tileType = Math.random() < 0.05 ? 'wall' : 'ground';
+            tiles.push(tile);
+
+            var isNearBorders = x <= 2 || y <= 2 || x >= xDimension -2 || y >= yDimension - 2,
+                isHasEnduranceItemNear = enduranceItems.find(function(item) {
+                    return Math.abs(item.x / tileDimension - x) < utils.getRandomInt(10, 20)
+                        && Math.abs(item.y / tileDimension - y) < utils.getRandomInt(10, 20);
+                });
+            if(!isNearBorders && tile.tileType !== 'wall' && !isHasEnduranceItemNear && Math.random() < 0.05) {
+                var item = getBaseTileData(x, y);
+                item.itemType = Math.random() < 0.5 ? 'armor' : 'hp';
+                item.respawnTime = 10000;
+                item.id = utils.getUid();
+                item.lastPickupTime = 0;
+                enduranceItems.push(item);
+            }
         }
     }
 
@@ -33,11 +73,13 @@ function generateNewMap(callback) {
         id: utils.getUid(),
         date: new Date(),
         tileDimension: tileDimension,
+        bordersWidth: bordersWidth,
         dimension: {
             x: xDimension,
             y: yDimension
         },
-        tiles: tiles
+        tiles: tiles,
+        enduranceItems: enduranceItems
     });
     map.save(function(err, mapData) {
             callback(mapData.toObject());
@@ -46,9 +88,10 @@ function generateNewMap(callback) {
 };
 
 function getRandomDimension() {
-    return Math.round(20 + 20 * Math.random());
+    return Math.round(30 + 20 * Math.random());
 };
 
 module.exports = {
-    getMapForPlayer: getMapForPlayer
+    getMapForPlayer: getMapForPlayer,
+    getNewPlayer: getNewPlayer
 };

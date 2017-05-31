@@ -7,6 +7,7 @@ import spritesFactory from './spritesFactory.js'
 import map from './map.js'
 import consts from './consts.js';
 import controls from './controls.js';
+import userInterface from './interface.js';
 import utils from './../../server/Utils.js'
 
 var gameData = {},
@@ -17,11 +18,7 @@ var gameData = {},
     });
 
 function preload() {
-    game.load.spritesheet('beans', 'images/sprites/characters/beans.png', 27, 32);
-    game.load.spritesheet('ground', 'images/tiles/ground.png', 32, 32);
-    game.load.spritesheet('wall', 'images/tiles/wall.png', 32, 32);
-    game.load.spritesheet('bullet', 'images/tiles/bullet.png', 5, 5);
-    game.load.spritesheet('blank', 'images/tiles/blank.png', 1, 1);
+    spritesFactory.loadResources();
 };
 
 function create() {
@@ -44,6 +41,14 @@ function update() {
                 ownerId: bullet.data.ownerId
             });
             bullet.data.ownerId !== player.data.id && window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
+        });
+        game.physics.arcade.collide(map.getEnduranceItemsGroup(), gameData.player, function(player, item) {
+            map.hideEnduranceItem(item.data.id, utils.getNowTime());
+            socket.emit('pickupEnduranceItem', {
+                roomId: gameData.roomId,
+                playerId: player.data.id,
+                itemId: item.data.uid
+            });
         });
     }
 };
@@ -86,7 +91,7 @@ function getSocketHandlers() {
         onRoomData: function(data) {
             initData(data);
             window.setInterval(sendPlayerInfo, 100);
-            updatePlayerDataPanel();
+            updatePlayerInterface();
         },
         onPlayersData: function(data) {
             updateOtherPlayersPosition(data);
@@ -108,11 +113,14 @@ function getSocketHandlers() {
         },
         onScore: function(score) {
             gameData.player.data.score = score;
-            updatePlayerDataPanel();
+            updatePlayerInterface();
         },
-        onHp: function(hp) {
-            gameData.player.data.hp = hp;
-            updatePlayerDataPanel();
+        onEnduranceInfo: function(endurance) {
+            gameData.player.data.endurance = endurance;
+            updatePlayerInterface();
+        },
+        onEnduranceItemPickuped: function(data) {
+            map.hideEnduranceItem(data.itemId, data.time);
         }
     }
 };
@@ -173,24 +181,10 @@ function removePlayer(playerId) {
     }
 };
 
-function updatePlayerDataPanel() {
-    updatePlayerHpPanel(gameData.player.data.hp);
-    document.getElementById('PlayerScoreLabel').innerHTML = gameData.player.data.score + ' points';
+function updatePlayerInterface() {
+    userInterface.updatePlayerInterface(gameData.player.data);
 };
 
-function updatePlayerHpPanel(hp) {
-    function getHeartHtml(isSmall) {
-        var cls = isSmall ? 'small' : '';
-        return '<img class="' + cls + '" src="/images/icons/heart.png" />';
-    }
-
-    var hpHeartsHtml = '';
-    for(var i = 0; i < hp / 20; i++) {
-        hpHeartsHtml += getHeartHtml();
-    }
-    hp % 20 && (hpHeartsHtml += getHeartHtml(true));
-    document.getElementById('PlayerHpBar').innerHTML = hpHeartsHtml;
-};
 
 function addShot(data) {
     var ownerId = data.ownerId,

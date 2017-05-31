@@ -3,12 +3,21 @@ var mongoose = require('mongoose'),
         id: String,
         date: Date,
         tileDimension: Number,
+        bordersWidth: Number,
         dimension: {
             x: Number,
             y: Number
         },
         tiles: [{
             tileType: String,
+            x: Number,
+            y: Number
+        }],
+        enduranceItems: [{
+            id: String,
+            itemType: String,
+            respawnTime: Number,
+            lastPickupTime: Number,
             x: Number,
             y: Number
         }]
