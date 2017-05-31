@@ -25,10 +25,6 @@ function updatePlayerArmorPanel(armorCount) {
     panel.querySelector('.armor-numbers').innerHTML = getNumberHtml(armorCount);
 };
 
-export default {
-    updatePlayerInterface: updatePlayerInterface
-};
-
 function getNumberHtml(number) {
     function getNumeralHtml(numeral) {
         return '<img src="/images/icons/numbers/' + numeral + '.png" />';
@@ -36,3 +32,8 @@ function getNumberHtml(number) {
     number = number || 0;
     return number.toString().split('').map(getNumeralHtml).join('');
 };
+
+export default {
+    updatePlayerInterface: updatePlayerInterface
+};
+

@@ -41,15 +41,16 @@ function generateNewMap(callback) {
         bordersWidth = tileDimension * 6,
         xDimension = getRandomDimension(),
         yDimension = getRandomDimension(),
-        getBaseTileData = function(x, y) {
+        getBaseTileData = function(x, y, withOffset) {
+            var offset = withOffset ? tileDimension / 2 : 0;
             return {
-                x: bordersWidth + x * tileDimension,
-                y: bordersWidth + y * tileDimension
+                x: bordersWidth + x * tileDimension - offset,
+                y: bordersWidth + y * tileDimension - offset
             }
         };
     for(var x = 0; x < xDimension; x++) {
         for(var y = 0; y < yDimension; y++) {
-            var tile = getBaseTileData(x, y);
+            var tile = getBaseTileData(x, y, false);
             tile.tileType = Math.random() < 0.05 ? 'wall' : 'ground';
             tiles.push(tile);
 
@@ -59,7 +60,7 @@ function generateNewMap(callback) {
                         && Math.abs(item.y / tileDimension - y) < utils.getRandomInt(10, 20);
                 });
             if(!isNearBorders && tile.tileType !== 'wall' && !isHasEnduranceItemNear && Math.random() < 0.05) {
-                var item = getBaseTileData(x, y);
+                var item = getBaseTileData(x, y, false);
                 item.itemType = Math.random() < 0.5 ? 'armor' : 'hp';
                 item.respawnTime = 10000;
                 item.id = utils.getUid();

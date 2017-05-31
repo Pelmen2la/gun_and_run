@@ -162,5 +162,5 @@ function getPlayerSpawnPosition(room) {
             return tile.tileType === 'ground';
         }),
         playerStartTile = groundTiles[utils.getRandomInt(groundTiles.length - 1)];
-    return {x: playerStartTile.x, y: playerStartTile.y};
+    return {x: playerStartTile.x - room.map.tileDimension / 2, y: playerStartTile.y - room.map.tileDimension / 2};
 };

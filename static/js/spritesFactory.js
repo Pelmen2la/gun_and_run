@@ -14,6 +14,7 @@ function loadResources() {
 function getSprite(name, x, y) {
     var sprite = game.instance.add.sprite(x, y, name);
     game.instance.physics.arcade.enable(sprite);
+    sprite.anchor = {x: 0.5, y: 0.5};
     sprite.body.collideWorldBounds = true;
     sprite.body.gravity.y = 0;
     sprite.body.bounce = [0, 0];
