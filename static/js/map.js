@@ -12,7 +12,8 @@ function drawMap(mapData) {
     enduranceItemsGroup = game.instance.add.group();
     mapData.tiles.forEach(function(tile) {
         var isWall = tile.tileType == 'wall',
-            tile = (isWall ? wallGroup : groundGroup).create(tile.x, tile.y, tile.tileType);
+            tileName = spritesFactory.getLandscapeRandomTileName(mapData.landscapeType, tile.tileType),
+            tile = (isWall ? wallGroup : groundGroup).create(tile.x, tile.y, tileName);
         tile.body && (tile.body.immovable = isWall);
     });
 

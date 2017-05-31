@@ -1,14 +1,42 @@
 import game from './game.js';
 import consts from './consts.js';
+import utils from './../../server/Utils.js'
 
 function loadResources() {
-    game.instance.load.spritesheet('beans', 'images/sprites/characters/beans.png', 27, 32);
-    game.instance.load.spritesheet('hp', 'images/sprites/items/hp.png', 32, 32);
-    game.instance.load.spritesheet('armor', 'images/sprites/items/armor.png', 32, 32);
-    game.instance.load.spritesheet('ground', 'images/tiles/ground.png', 32, 32);
-    game.instance.load.spritesheet('wall', 'images/tiles/wall.png', 32, 32);
-    game.instance.load.spritesheet('bullet', 'images/tiles/bullet.png', 5, 5);
-    game.instance.load.spritesheet('blank', 'images/tiles/blank.png', 1, 1);
+    var load = game.instance.load.spritesheet.bind(game.instance.load);
+    load('beans', 'images/sprites/characters/beans.png', 27, 32);
+    load('hp', 'images/sprites/items/hp.png', 32, 32);
+    load('armor', 'images/sprites/items/armor.png', 32, 32);
+    load('ground', 'images/tiles/ground.png', 32, 32);
+    load('wall', 'images/tiles/wall.png', 32, 32);
+    load('bullet', 'images/tiles/bullet.png', 5, 5);
+    load('blank', 'images/tiles/blank.png', 1, 1);
+
+    for(var key in window.gameLandscapeProperties) {
+        var landscapeProps = window.gameLandscapeProperties[key];
+        for(var i = 0; i < landscapeProps.groundTilesCount; i++) {
+            load(getLandscapeTileName(key, 'ground', i), getLandscapeTileUrl(key, 'ground', i), 32, 32);
+        }
+        for(var i = 0; i < landscapeProps.wallTilesCount; i++) {
+            load(getLandscapeTileName(key, 'wall', i), getLandscapeTileUrl(key, 'wall', i), 32, 32);
+        }
+    }
+};
+
+function getLandscapeRandomTileName(landscapeType, tileType) {
+    var props = window.gameLandscapeProperties[landscapeType],
+        tilesCount = props[tileType + 'TilesCount'],
+        randomTileIndex = utils.getRandomInt(tilesCount - 1),
+        tileIndex = tileType == 'wall' ? randomTileIndex : (utils.getRandomInt(5) === 0 ? randomTileIndex : 0);
+    return getLandscapeTileName(landscapeType, tileType, tileIndex);
+};
+
+function getLandscapeTileName(landscapeType, tileType, index) {
+    return landscapeType + tileType + index;
+};
+
+function getLandscapeTileUrl(landscapeType, tileType, index) {
+    return utils.stringFormat('{0}{1}/{2}{3}.png', [consts.LANDSCAPE_TILES_FOLDER_PATH, landscapeType, tileType, index]);
 };
 
 function getSprite(name, x, y) {
@@ -134,6 +162,7 @@ function createBulletCore(data, timeDelta) {
 export default {
     loadResources: loadResources,
     getSprite: getSprite,
+    getLandscapeRandomTileName: getLandscapeRandomTileName,
     hideSprite: hideSprite,
     getSpriteAnimProps: getSpriteAnimProps,
     createPlayer: createPlayer,

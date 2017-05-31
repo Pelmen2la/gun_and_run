@@ -2,6 +2,7 @@ var mongoose = require('mongoose'),
     Map = new mongoose.Schema({
         id: String,
         date: Date,
+        landscapeType: String,
         tileDimension: Number,
         bordersWidth: Number,
         dimension: {

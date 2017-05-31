@@ -1,4 +1,6 @@
 var utils = require('./Utils'),
+    path = require('path'),
+    fs = require('fs'),
     mongoose = require('mongoose'),
     Map = mongoose.model('map');
 
@@ -68,24 +70,27 @@ function generateNewMap(callback) {
                 enduranceItems.push(item);
             }
         }
-    }
+    };
 
-    var map = Map({
-        id: utils.getUid(),
-        date: new Date(),
-        tileDimension: tileDimension,
-        bordersWidth: bordersWidth,
-        dimension: {
-            x: xDimension,
-            y: yDimension
-        },
-        tiles: tiles,
-        enduranceItems: enduranceItems
+    fs.readdir(path.join(global.appRoot, '/static/images/landscape/'), (err, folders) => {
+        var map = Map({
+            id: utils.getUid(),
+            date: new Date(),
+            landscapeType: folders[utils.getRandomInt(folders.length - 1)],
+            tileDimension: tileDimension,
+            bordersWidth: bordersWidth,
+            dimension: {
+                x: xDimension,
+                y: yDimension
+            },
+            tiles: tiles,
+            enduranceItems: enduranceItems
+        });
+        map.save((err, mapData) => {
+                callback(mapData.toObject());
+            }
+        );
     });
-    map.save(function(err, mapData) {
-            callback(mapData.toObject());
-        }
-    );
 };
 
 function getRandomDimension() {

@@ -31,11 +31,18 @@ function getNowTime() {
 };
 
 
+function stringFormat(str, args) {
+    for(var i = 0; i < args.length; i++) {
+        str = str.replace('{' + i + '}', args[i]);
+    }
+    return str;
+};
 
 module.exports = {
     getUid: getUid,
     getGuid: getGuid,
     getRandomInt: getRandomInt,
     getNowTime: getNowTime,
-    forEachEntryInObject: forEachEntryInObject
+    forEachEntryInObject: forEachEntryInObject,
+    stringFormat: stringFormat
 };
