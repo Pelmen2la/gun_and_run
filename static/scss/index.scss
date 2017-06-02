@@ -4,6 +4,15 @@ body {
     overflow: hidden;
 }
 
+.fps-counter {
+    font-size: 30px;
+    padding: 5px;
+    background: white;
+    position: absolute;
+    left: 10px;
+    top: 10px;
+}
+
 .player-info-panel {
     position: fixed;
     top: 20px;

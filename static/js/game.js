@@ -11,26 +11,36 @@ import userInterface from './interface.js';
 import utils from './../../server/Utils.js'
 
 var gameData = {},
-    game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, '', {
-        preload: preload,
-        create: create,
-        update: update
-    });
+    game = new Phaser.Game(window.innerWidth, window.innerHeight,
+        Phaser.AUTO, '', {
+            preload: preload,
+            create: create,
+            update: update
+        });
 
 function preload() {
     spritesFactory.loadResources();
 };
 
 function create() {
+    game.time.advancedTiming = true;
+    game.renderer.renderSession.roundPixels = true;
     controls.init(getControlsHandlers());
     socket.init(getSocketHandlers(), function() {
         socket.emit('joinRoom');
     });
+    window.setInterval(checkCollision, 50);
 };
 
 function update() {
+    document.getElementById('FPSCounter').innerHTML = 'fps: ' + game.time.fps;
     if(gameData && gameData.player) {
         updatePlayerPosition();
+    }
+};
+
+function checkCollision() {
+    if(gameData && gameData.player) {
         game.physics.arcade.collide(gameData.bulletsGroup, map.getWallGroup(), function(bullet) {
             window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
         });

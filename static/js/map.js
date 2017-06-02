@@ -24,8 +24,8 @@ function drawMap(mapData) {
     var worldWidth = borderW * 2 + mapData.tileDimension * mapData.dimension.x,
         worldHeight = borderW * 2 + mapData.tileDimension * mapData.dimension.y;
 
-    [[0, borderW - 1, worldWidth, 1], [borderW, 0, 1, worldHeight], [worldWidth - borderW, 0, 1, worldHeight],
-        [borderW, worldHeight - borderW, worldWidth, 1]].forEach(function(params) {
+    [[0, 0, worldWidth, borderW], [0, 0, borderW, worldHeight], [worldWidth - borderW, 0, borderW, worldHeight],
+        [0, worldHeight - borderW, worldWidth, borderW]].forEach(function(params) {
             createBorder(params[0], params[1], params[2], params[3]);
         });
     game.instance.world.setBounds(0, 0, worldWidth, worldHeight);
