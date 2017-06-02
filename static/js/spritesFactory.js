@@ -131,7 +131,7 @@ function updatePlayerDirections(player, moveDirection) {
 };
 
 function createBullet(owner, time) {
-    var timeDelta = (time - new Date().getTime()) / 1000,
+    var timeDelta = (utils.getNowTime() - time) / 1000,
         data = {
             ownerId: owner.data.id,
             positionInfo: {
@@ -140,11 +140,11 @@ function createBullet(owner, time) {
                 direction: owner.data.lookDirection
             }
         },
-        bullet = createBulletCore(data, timeDelta);
+        bullet = createBulletCore(data);
     return bullet;
 };
 
-function createBulletCore(data, timeDelta) {
+function createBulletCore(data, timeDelta = 0) {
     var pos = data.positionInfo,
         animProps = getSpriteAnimProps(pos.direction),
         x = pos.x + (animProps.vX * consts.BULLET_VELOCITY * timeDelta),

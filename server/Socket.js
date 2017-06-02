@@ -68,10 +68,11 @@ function onSocketHit(data) {
 };
 
 function onSocketShot(data) {
-    if(getRoomBySocketData(data)) {
+    var room = getRoomBySocketData(data);
+    if(room) {
         delete data.roomId;
         data.time = utils.getNowTime();
-        io.sockets.in(data.roomId).emit('otherPlayerShot', data);
+        io.sockets.in(room.id).emit('otherPlayerShot', data);
     }
 };
 
