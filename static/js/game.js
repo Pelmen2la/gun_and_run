@@ -106,7 +106,7 @@ function getSocketHandlers() {
         onPlayersData: function(data) {
             updateOtherPlayersPosition(data);
         },
-        onShot: function(data) {
+        onOtherPlayerShot: function(data) {
             addShot(data);
         },
         onRespawn: function(data) {

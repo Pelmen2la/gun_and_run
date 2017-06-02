@@ -71,7 +71,7 @@ function onSocketShot(data) {
     if(getRoomBySocketData(data)) {
         delete data.roomId;
         data.time = utils.getNowTime();
-        io.sockets.in(data.roomId).emit('shot', data);
+        io.sockets.in(data.roomId).emit('otherPlayerShot', data);
     }
 };
 
