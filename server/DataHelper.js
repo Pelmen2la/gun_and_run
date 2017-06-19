@@ -1,4 +1,5 @@
 var utils = require('./Utils'),
+    weapons = require('./Weapons'),
     path = require('path'),
     fs = require('fs'),
     mongoose = require('mongoose'),
@@ -7,11 +8,11 @@ var utils = require('./Utils'),
 function getNewPlayer(position, socketId) {
     return {
         id: utils.getUid(),
-
         score: 0,
         socketId: socketId,
         lastUpdateTime: utils.getNowTime(),
         idDead: false,
+        weapons: [weapons.getWeaponByName('pistol', true)],
         endurance: {
             hp: 100,
             armor: 0
@@ -39,6 +40,7 @@ function getMapForPlayer(callback) {
 function generateNewMap(callback) {
     var tiles = [],
         enduranceItems = [],
+        weaponItems = [],
         tileDimension = 32,
         bordersWidth = tileDimension * 6,
         xDimension = getRandomDimension(),
@@ -49,6 +51,12 @@ function generateNewMap(callback) {
                 x: bordersWidth + x * tileDimension - offset,
                 y: bordersWidth + y * tileDimension - offset
             }
+        },
+        getItemTileData = function(x, y, withOffset) {
+            var data = getBaseTileData(x, y, withOffset);
+            data.id = utils.getUid();
+            data.lastPickupTime = 0;
+            return data;
         };
     for(var x = 0; x < xDimension; x++) {
         for(var y = 0; y < yDimension; y++) {
@@ -57,17 +65,27 @@ function generateNewMap(callback) {
             tiles.push(tile);
 
             var isNearBorders = x <= 2 || y <= 2 || x >= xDimension -2 || y >= yDimension - 2,
-                isHasEnduranceItemNear = enduranceItems.find(function(item) {
-                    return Math.abs(item.x / tileDimension - x) < utils.getRandomInt(10, 20)
-                        && Math.abs(item.y / tileDimension - y) < utils.getRandomInt(10, 20);
-                });
-            if(!isNearBorders && tile.tileType !== 'wall' && !isHasEnduranceItemNear && Math.random() < 0.05) {
-                var item = getBaseTileData(x, y, false);
+                checkIsItemNear = function(x, y, items) {
+                    return items.find(function(item) {
+                        return Math.abs(item.x / tileDimension - x) < utils.getRandomInt(10, 20)
+                            && Math.abs(item.y / tileDimension - y) < utils.getRandomInt(10, 20);
+                    });
+                },
+                isEnduranceItemNear = checkIsItemNear(x, y, enduranceItems),
+                isWeaponItemNear = checkIsItemNear(x, y, weaponItems),
+                canCreateItem = !isNearBorders && tile.tileType !== 'wall' && !isEnduranceItemNear && !isWeaponItemNear;
+            if(canCreateItem && Math.random() < 0.05) {
+                var item = getItemTileData(x, y, true);
                 item.itemType = Math.random() < 0.5 ? 'armor' : 'hp';
                 item.respawnTime = 10000;
-                item.id = utils.getUid();
-                item.lastPickupTime = 0;
                 enduranceItems.push(item);
+            } else if(canCreateItem && Math.random() < 0.05) {
+                var item = getItemTileData(x, y, true),
+                    weaponsArr = weapons.getNotStandardWeapons(),
+                    randomWeapon = weaponsArr[utils.getRandomInt(weaponsArr.length - 1)];
+                item.name = randomWeapon.name;
+                item.respawnTime = 10000;
+                weaponItems.push(item);
             }
         }
     };
@@ -84,7 +102,8 @@ function generateNewMap(callback) {
                 y: yDimension
             },
             tiles: tiles,
-            enduranceItems: enduranceItems
+            enduranceItems: enduranceItems,
+            weaponItems: weaponItems
         });
         map.save((err, mapData) => {
                 callback(mapData.toObject());

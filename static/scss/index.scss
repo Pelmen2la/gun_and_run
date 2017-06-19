@@ -30,11 +30,12 @@ body {
         }
     }
 
-    .armor-panel {
+    .image-with-numbers-panel {
         float: right;
         padding: 5px;
+        clear: both;
 
-        .armor-numbers {
+        .numbers {
             text-align: center;
         }
     }

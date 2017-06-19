@@ -2,7 +2,7 @@ import game from './game.js';
 import spritesFactory from './spritesFactory.js';
 import utils from './../../server/Utils.js'
 
-var groundGroup, wallGroup, enduranceItemsGroup;
+var groundGroup, wallGroup, enduranceItemsGroup, weaponItemsGroup;
 
 function drawMap(mapData) {
     var borderW = mapData.bordersWidth;
@@ -10,6 +10,7 @@ function drawMap(mapData) {
     wallGroup = game.instance.add.group();
     wallGroup.enableBody = true;
     enduranceItemsGroup = game.instance.add.group();
+    weaponItemsGroup = game.instance.add.group();
     mapData.tiles.forEach(function(tile) {
         var isWall = tile.tileType == 'wall',
             tileName = spritesFactory.getLandscapeRandomTileName(mapData.landscapeType, tile.tileType),
@@ -19,6 +20,9 @@ function drawMap(mapData) {
 
     mapData.enduranceItems.forEach(function(item) {
         enduranceItemsGroup.add(spritesFactory.createEnduranceItem(item));
+    });
+    mapData.weaponItems.forEach(function(item) {
+        weaponItemsGroup.add(spritesFactory.createWeaponItem(item));
     });
 
     var worldWidth = borderW * 2 + mapData.tileDimension * mapData.dimension.x,
@@ -46,14 +50,28 @@ function getEnduranceItemsGroup() {
     return enduranceItemsGroup;
 };
 
-function hideEnduranceItem(id, startHideTime) {
-    var item = getEnduranceItemsGroup().children.find((item) => item.data.id === id);
+function getWeaponItemsGroup() {
+    return weaponItemsGroup;
+};
+
+function hideItem(itemGroup, itemId, startHideTime) {
+    var item = itemGroup.children.find((item) => item.data.id === itemId);
     item && spritesFactory.hideSprite(item, item.data.respawnTime - (utils.getNowTime() - startHideTime));
+};
+
+function hideEnduranceItem(id, startHideTime) {
+    hideItem(getEnduranceItemsGroup(), id, startHideTime);
+};
+
+function hideWeaponItem(id, startHideTime) {
+    hideItem(getWeaponItemsGroup(), id, startHideTime);
 };
 
 export default {
     drawMap: drawMap,
     getWallGroup: getWallGroup,
     getEnduranceItemsGroup: getEnduranceItemsGroup,
-    hideEnduranceItem: hideEnduranceItem
+    hideEnduranceItem: hideEnduranceItem,
+    getWeaponItemsGroup: getWeaponItemsGroup,
+    hideWeaponItem: hideWeaponItem
 };

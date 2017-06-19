@@ -9,6 +9,7 @@ import consts from './consts.js';
 import controls from './controls.js';
 import userInterface from './interface.js';
 import utils from './../../server/Utils.js'
+import weapons from './../../server/Weapons.js'
 
 var gameData = {},
     game = new Phaser.Game(window.innerWidth, window.innerHeight,
@@ -40,25 +41,32 @@ function update() {
 };
 
 function checkCollision() {
+    var processPickupItem = function(playerId, itemId, type) {
+        map['hide' + type + 'Item'](itemId, utils.getNowTime());
+        socket.emit('pickup' + type + 'Item', {
+            roomId: gameData.roomId,
+            playerId: playerId,
+            itemId: itemId
+        });
+    };
+
     if(gameData && gameData.player) {
         game.physics.arcade.collide(gameData.bulletsGroup, map.getWallGroup(), function(bullet) {
             window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
         });
         game.physics.arcade.collide(gameData.bulletsGroup, gameData.playersGroup, function(bullet, player) {
-            bullet.data.ownerId == gameData.player.data.id && socket.emit('hit', {
+            socket.emit('hit', {
                 roomId: gameData.roomId,
                 targetId: player.data.id,
-                ownerId: bullet.data.ownerId
+                ownerId: bullet.data.playerId
             });
             bullet.data.ownerId !== player.data.id && window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
         });
         game.physics.arcade.collide(map.getEnduranceItemsGroup(), gameData.player, function(player, item) {
-            map.hideEnduranceItem(item.data.id, utils.getNowTime());
-            socket.emit('pickupEnduranceItem', {
-                roomId: gameData.roomId,
-                playerId: player.data.id,
-                itemId: item.data.uid
-            });
+            processPickupItem(player.data.id, item.data.id, 'Endurance');
+        });
+        game.physics.arcade.collide(map.getWeaponItemsGroup(), gameData.player, function(player, item) {
+            processPickupItem(player.data.id, item.data.id, 'Weapon');
         });
     }
 };
@@ -83,16 +91,26 @@ function getControlsHandlers() {
 };
 
 function onShotButtonPress() {
-    if(Date.now() - (gameData.player.lastShotTime || 0) > consts.SHOT_TIMEOUT) {
-        shot();
+    var playerWeapons = gameData.player.data.weapons,
+        playerWeapon = getPlayerSelectedWeapon(),
+        weaponData = weapons.getWeaponByName(playerWeapon.name);
+    if(Date.now() - (playerWeapon.lastShotTime || 0) > weaponData.reloadTime) {
+        playerWeapon.lastShotTime = Date.now();
+        playerWeapon.ammo && (playerWeapon.ammo -= 1);
+        if(playerWeapon.ammo !== null && playerWeapon.ammo <= 0) {
+            playerWeapons.splice(playerWeapons.indexOf(playerWeapon), 1);
+            ensurePlayerSelectedWeapon();
+        }
+        shot(playerWeapon.name);
+        updatePlayerInterface();
     }
 };
 
-function shot() {
-    socket.emit('shot', {ownerId: gameData.player.data.id, roomId: gameData.roomId});
-    var bullet = spritesFactory.createBullet(gameData.player, new Date().getTime(), true);
-    gameData.player.lastShotTime = Date.now();
-    gameData.bulletsGroup.add(bullet);
+function shot(weaponName) {
+    var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, id: utils.getUid() };
+    socket.emit('shot', data);
+    data.positionInfo = getPlayerPositionInfo(gameData.player, 'look', false);
+    gameData.bulletsGroup.add(spritesFactory.createBullet(data));
 };
 
 
@@ -129,8 +147,20 @@ function getSocketHandlers() {
             gameData.player.data.endurance = endurance;
             updatePlayerInterface();
         },
+        onWeaponsInfo: function(weapons) {
+            gameData.player.data.weapons = weapons;
+            var selectedWeaponIndex = weapons.findIndex((w) => w.selected);
+            if(selectedWeaponIndex !== -1) {
+                setPlayerSelectedWeapon(selectedWeaponIndex);
+            }
+            ensurePlayerSelectedWeapon();
+            updatePlayerInterface();
+        },
         onEnduranceItemPickuped: function(data) {
             map.hideEnduranceItem(data.itemId, data.time);
+        },
+        onWeaponItemPickuped: function(data) {
+            map.hideWeaponItem(data.itemId, data.time);
         }
     }
 };
@@ -140,12 +170,30 @@ function sendPlayerInfo() {
     socket.emit('playerInfo', {
         roomId: gameData.roomId,
         playerId: player.data.id,
-        positionInfo: {
-            x: player.x,
-            y: player.y,
-            moveDirection: player.data.moveDirection
-        }
+        positionInfo: getPlayerPositionInfo(player, 'move', false)
     });
+};
+
+function getPlayerPositionInfo(player, directionName, isCenter) {
+    return {
+        x: player.x + (isCenter ? player.body.width / 2 : 0),
+        y: player.y + (isCenter ? player.body.height / 2 : 0),
+        direction: player.data[directionName + 'Direction']
+    }
+};
+
+function getPlayerSelectedWeapon() {
+    return gameData.player.data.weapons[gameData.player.data.selectedWeaponIndex];
+};
+
+function setPlayerSelectedWeapon(weaponIndex) {
+    gameData.player.data.selectedWeaponIndex = weaponIndex;
+};
+
+function ensurePlayerSelectedWeapon() {
+    var index = gameData.player.data.selectedWeaponIndex,
+        weaponsCount = gameData.player.data.weapons.length;
+    (index < 0 || index > weaponsCount - 1) && setPlayerSelectedWeapon(weaponsCount - 1);
 };
 
 function updatePlayerPosition() {
@@ -192,16 +240,17 @@ function removePlayer(playerId) {
 };
 
 function updatePlayerInterface() {
-    userInterface.updatePlayerInterface(gameData.player.data);
+    var playerData = gameData.player.data;
+    userInterface.updatePlayerInterface(playerData, getPlayerSelectedWeapon());
 };
 
 
 function addShot(data) {
-    var ownerId = data.ownerId,
-        player = gameData.players[ownerId];
-    player && gameData.bulletsGroup.add(spritesFactory.createBullet(player, data.time));
+    var player = gameData.players[data.playerId];
+    data.positionInfo = getPlayerPositionInfo(player, 'look', false);
+    player && gameData.bulletsGroup.add(spritesFactory.createBullet(data));
 };
 
 export default {
     instance: game
-}
+};

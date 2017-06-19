@@ -21,6 +21,14 @@ var mongoose = require('mongoose'),
             lastPickupTime: Number,
             x: Number,
             y: Number
+        }],
+        weaponItems: [{
+            id: String,
+            name: String,
+            respawnTime: Number,
+            lastPickupTime: Number,
+            x: Number,
+            y: Number
         }]
     });
 

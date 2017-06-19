@@ -1,16 +1,16 @@
 import game from './game.js';
 import consts from './consts.js';
 import utils from './../../server/Utils.js'
+import weapons from './../../server/Weapons.js'
 
 function loadResources() {
     var load = game.instance.load.spritesheet.bind(game.instance.load);
-    load('beans', 'images/sprites/characters/beans.png', 27, 32);
-    load('hp', 'images/sprites/items/hp.png', 32, 32);
-    load('armor', 'images/sprites/items/armor.png', 32, 32);
-    load('ground', 'images/tiles/ground.png', 32, 32);
-    load('wall', 'images/tiles/wall.png', 32, 32);
-    load('bullet', 'images/tiles/bullet.png', 5, 5);
-    load('blank', 'images/tiles/blank.png', 1, 1);
+    load('beans', consts.SPRITES_PATH +  'characters/beans.png', 27, 32);
+    load('hp', consts.SPRITES_PATH +'items/hp.png', 32, 32);
+    load('armor', consts.SPRITES_PATH + 'items/armor.png', 32, 32);
+    load('ground', consts.TILES_PATH + 'ground.png', 32, 32);
+    load('wall', consts.TILES_PATH + 'wall.png', 32, 32);
+    load('blank', consts.TILES_PATH + 'blank.png', 1, 1);
 
     for(var key in window.gameLandscapeProperties) {
         var landscapeProps = window.gameLandscapeProperties[key];
@@ -21,6 +21,11 @@ function loadResources() {
             load(getLandscapeTileName(key, 'wall', i), getLandscapeTileUrl(key, 'wall', i), 32, 32);
         }
     }
+    weapons.getWeapons().forEach(function(w) {
+        var size = w.bulletSize;
+        load(w.name + 'bullet', utils.stringFormat('{0}/bullets/{1}.png', consts.TILES_PATH, w.name), size[0], size[1]);
+        w.name !== 'pistol' && load(w.name, utils.stringFormat('{0}{1}.png', consts.WEAPONS_SPRITES_FOLDER_PATH, w.name), 32, 32);
+    });
 };
 
 function getLandscapeRandomTileName(landscapeType, tileType) {
@@ -36,7 +41,7 @@ function getLandscapeTileName(landscapeType, tileType, index) {
 };
 
 function getLandscapeTileUrl(landscapeType, tileType, index) {
-    return utils.stringFormat('{0}{1}/{2}{3}.png', [consts.LANDSCAPE_TILES_FOLDER_PATH, landscapeType, tileType, index]);
+    return utils.stringFormat('{0}{1}/{2}{3}.png', consts.LANDSCAPE_TILES_FOLDER_PATH, landscapeType, tileType, index);
 };
 
 function getSprite(name, x, y) {
@@ -60,21 +65,22 @@ function hideSprite(sprite, hideTime) {
 
 function getSpriteAnimProps(moveDirection) {
     var props = {
-        upleft: [-0.7, -0.7, 'upright', true, false],
-        upright: [0.7, -0.7, 'upright', false, false],
-        downleft: [-0.7, 0.7, 'downright', true, false],
-        downright: [0.7, 0.7, 'downright', false, false],
-        up: [0, -1, 'up', false, false],
-        left: [-1, 0, 'right', true, false],
-        right: [1, 0, 'right', false, false],
-        down: [0, 1, 'down', false, false]
+        upleft: [-0.7, -0.7, 'upright', true, false, 135],
+        upright: [0.7, -0.7, 'upright', false, false, 45],
+        downleft: [-0.7, 0.7, 'downright', true, false, 225],
+        downright: [0.7, 0.7, 'downright', false, false, 315],
+        up: [0, -1, 'up', false, false, 90],
+        left: [-1, 0, 'right', true, false, 180],
+        right: [1, 0, 'right', false, false, 0],
+        down: [0, 1, 'down', false, false, 90]
     }[moveDirection];
     return {
         vX: props[0],
         vY: props[1],
         anim: props[2],
         flipX: props[3],
-        flipY: props[4]
+        flipY: props[4],
+        angle: props[5]
     }
 };
 
@@ -83,8 +89,11 @@ function createPlayer(data) {
         player = getSprite('beans', pos.x, pos.y);
     player.data = {
         id: data.id,
+        weapons: data.weapons,
+        selectedWeaponIndex: 0,
         score: 0,
-        endurance: data.endurance
+        endurance: data.endurance,
+        lookDirection: 'up'
     };
 
     player.animations.add('up', [0, 1, 2, 3], 10, true);
@@ -96,9 +105,13 @@ function createPlayer(data) {
     return player;
 };
 
-function createEnduranceItem(data) {
-    var item = getSprite(data.itemType, data.x, data.y);
-    item.animations.add('rotate', [0, 1, 2, 3, 4, 5, 6, 7], 10, true);
+function createItem(data, spriteName, framesCount, fps) {
+    var framesArr = [],
+        item = getSprite(spriteName, data.x, data.y);
+    for(var i = 0; i < framesCount; i++) {
+        framesArr.push(i);
+    }
+    item.animations.add('rotate', framesArr, fps, true);
     item.animations.play('rotate');
     item.data = {
         id: data.id,
@@ -106,6 +119,14 @@ function createEnduranceItem(data) {
         respawnTime: data.respawnTime
     };
     return item;
+};
+
+function createEnduranceItem(data) {
+    return createItem(data, data.itemType, 8, 10);
+};
+
+function createWeaponItem(data) {
+    return createItem(data, data.name, 8, 5);
 };
 
 function updatePlayerSprite(player, moveDirection) {
@@ -130,31 +151,21 @@ function updatePlayerDirections(player, moveDirection) {
     player.data.moveDirection = moveDirection;
 };
 
-function createBullet(owner, time) {
-    var timeDelta = (utils.getNowTime() - time) / 1000,
-        data = {
-            ownerId: owner.data.id,
-            positionInfo: {
-                x: owner.body.x + owner.body.width / 2,
-                y: owner.body.y + owner.body.height / 2,
-                direction: owner.data.lookDirection
-            }
-        },
-        bullet = createBulletCore(data);
-    return bullet;
-};
-
-function createBulletCore(data, timeDelta = 0) {
+function createBullet(data, timeDelta = 0) {
     var pos = data.positionInfo,
+        weapon = weapons.getWeaponByName(data.weaponName),
+        speed = weapon.bulletSpeed,
         animProps = getSpriteAnimProps(pos.direction),
-        x = pos.x + (animProps.vX * consts.BULLET_VELOCITY * timeDelta),
-        y = pos.y + (animProps.vY * consts.BULLET_VELOCITY * timeDelta),
-        bullet = getSprite('bullet', x, y);
+        x = pos.x + (animProps.vX * speed * timeDelta),
+        y = pos.y + (animProps.vY * speed * timeDelta),
+        bullet = getSprite(weapon.name + 'bullet', x, y);
     bullet.data = {
-        ownerId: data.ownerId
+        ownerId: data.playerId,
+        damage: data.damage
     };
-    bullet.body.velocity.x = animProps.vX * consts.BULLET_VELOCITY;
-    bullet.body.velocity.y = animProps.vY * consts.BULLET_VELOCITY;
+    bullet.body.velocity.x = animProps.vX * speed;
+    bullet.body.velocity.y = animProps.vY * speed;
+    bullet.angle = - animProps.angle;
     return bullet;
 };
 
@@ -169,5 +180,6 @@ export default {
     updatePlayerSprite: updatePlayerSprite,
     updatePlayerDirections: updatePlayerDirections,
     createBullet: createBullet,
-    createEnduranceItem: createEnduranceItem
+    createEnduranceItem: createEnduranceItem,
+    createWeaponItem: createWeaponItem
 };

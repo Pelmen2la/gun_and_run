@@ -1,9 +1,11 @@
-var UPDATE_INTERVAL = 100,
-    DROP_TIMEOUT = 5000;
+const ROOM_UPDATE_INTERVAL = 100,
+    BULLET_LIFE_TIME = 2000,
+    PLAYER_DROP_TIMEOUT = 5000;
 
 var io = require('socket.io').listen(8100),
     utils = require('./Utils'),
     dataHelper = require('./DataHelper.js'),
+    weapons = require('./Weapons.js'),
     rooms = [],
     roomsCache = {};
 
@@ -17,8 +19,9 @@ module.exports = function(app) {
         socket.on('hit', onSocketHit);
         socket.on('respawnComplete', onSocketRespawnComplete);
         socket.on('pickupEnduranceItem', onSocketPickupEnduranceItem);
+        socket.on('pickupWeaponItem', onSocketPickupWeaponItem);
     });
-    setInterval(processRoomsState, UPDATE_INTERVAL);
+    setInterval(processRoomsState, ROOM_UPDATE_INTERVAL);
 };
 
 function onSocketJoinRoom(socket) {
@@ -45,9 +48,10 @@ function onSocketHit(data) {
     var room = getRoomBySocketData(data),
         owner = room ? room.players[data.ownerId] : null,
         target = room ? room.players[data.targetId] : null,
-        bulletDamage = 50;
-    if(owner && target) {
-        processPlayerDamage(target, bulletDamage);
+        bullet = room.bullets[data.id];
+    if(owner && target && bullet) {
+        processPlayerDamage(target, bullet.damage);
+        delete room.bullets[data.id];
         if(target.hp <= 0) {
             var position = getPlayerSpawnPosition(room);
             target.positionInfo.x = position.x;
@@ -67,12 +71,25 @@ function onSocketHit(data) {
     }
 };
 
-function onSocketShot(data) {
-    var room = getRoomBySocketData(data);
-    if(room) {
-        delete data.roomId;
-        data.time = utils.getNowTime();
-        io.sockets.in(room.id).emit('otherPlayerShot', data);
+function onSocketShot(bulletData) {
+    var room = getRoomBySocketData(bulletData),
+        player = getPlayerBySocketData(bulletData);
+    if(player) {
+        var weapon = player.weapons.find(function(w) { return w.name === bulletData.weaponName });
+        if(weapon) {
+            delete bulletData.roomId;
+            bulletData.time = utils.getNowTime();
+            room.bullets[bulletData.id] = bulletData;
+            utils.forEachEntryInObject(room.players, (id, p) =>
+                id != bulletData.playerId && io.sockets.connected[p.socketId].emit('otherPlayerShot',
+                    { playerId: bulletData.playerId, weaponName: bulletData.weaponName, damage: weapon.damage })
+            );
+            weapon.ammo -= 1;
+            if(weapon.ammo <= 0) {
+                player.weapons.splice(player.weapons.indexOf(weapon), 1);
+                io.sockets.connected[player.socketId].emit('weaponsInfo', player.weapons);
+            }
+        }
     }
 };
 
@@ -82,15 +99,32 @@ function onSocketRespawnComplete(data) {
 };
 
 function onSocketPickupEnduranceItem(data) {
-    var room = getRoomBySocketData(data),
-        player = getPlayerBySocketData(data),
-        item = room.map.enduranceItems.find((item) => item.uid === data.itemId);
-    if(room && player && item && (!item.lastPickupTime || utils.getNowTime() - item.lastPickupTime > item.respawnTime)) {
+    tryPickupItem(data, 'endurance', function(room, player, item) {
         item.itemType == 'armor' && (player.endurance.armor = 10);
         item.itemType == 'hp' && (player.endurance.hp = 100);
         io.sockets.connected[player.socketId].emit('enduranceInfo', player.endurance);
+        io.sockets.in(room.id).emit('enduranceItemPickuped', {itemId: item.id, time: item.lastPickupTime});
+    });
+};
+
+function onSocketPickupWeaponItem(data) {
+    tryPickupItem(data, 'weapon', function(room, player, item) {
+        var weapon = weapons.getWeaponByName(item.name, true);
+            playerWeapon = player.weapons.find((w) => w.name === item.name);
+        weapon.selected = true;
+        playerWeapon ? (playerWeapon.ammo += weapon.ammo) : (player.weapons.push(weapon));
+        io.sockets.connected[player.socketId].emit('weaponsInfo', player.weapons);
+        io.sockets.in(room.id).emit('weaponItemPickuped', {itemId: item.id, time: item.lastPickupTime});
+    });
+};
+
+function tryPickupItem(data, itemType, callback) {
+    var room = getRoomBySocketData(data),
+        player = getPlayerBySocketData(data),
+        item = room && room.map[itemType + 'Items'].find((item) => item.id === data.itemId);
+    if(room && player && item && (!item.lastPickupTime || utils.getNowTime() - item.lastPickupTime > item.respawnTime)) {
         item.lastPickupTime = utils.getNowTime();
-        io.sockets.in(room.id).emit('enduranceItemPickuped', { itemId: item.id, time: item.lastPickupTime });
+        callback(room, player, item);
     }
 };
 
@@ -113,14 +147,20 @@ function getPlayer(roomId, playerId) {
 
 function processRoomsState() {
     utils.forEachEntryInObject(roomsCache, function(roomId, room) {
+        var now = utils.getNowTime();
         utils.forEachEntryInObject(room.players, function(playerId, player) {
-            var timeAfterLastUpdate = utils.getNowTime() - player.lastUpdateTime || 0;
-            if(timeAfterLastUpdate > UPDATE_INTERVAL * 5) {
+            var timeAfterLastUpdate = now - player.lastUpdateTime || 0;
+            if(timeAfterLastUpdate > ROOM_UPDATE_INTERVAL * 5) {
                 player.positionInfo.moveDirection = '';
-                if(timeAfterLastUpdate > DROP_TIMEOUT) {
+                if(timeAfterLastUpdate > PLAYER_DROP_TIMEOUT) {
                     delete room.players[playerId];
                     io.sockets.in(roomId).emit('playerLeave', room.playerId);
                 }
+            }
+        });
+        utils.forEachEntryInObject(room.bullets, function(bulletId, bullet) {
+            if(now - bullet.time > BULLET_LIFE_TIME) {
+                delete room[bulletId];
             }
         });
         io.sockets.in(roomId).emit('playersData', room.players);
@@ -143,7 +183,8 @@ function emitRoomData(socket, room) {
 function createNewRoom(callback) {
     var room = {
         id: utils.getUid(),
-        players: {}
+        players: {},
+        bullets: {}
     };
     dataHelper.getMapForPlayer(function(mapData) {
         room.map = mapData;

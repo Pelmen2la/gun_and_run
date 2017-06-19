@@ -32,8 +32,8 @@ function getNowTime() {
 
 
 function stringFormat(str, args) {
-    for(var i = 0; i < args.length; i++) {
-        str = str.replace('{' + i + '}', args[i]);
+    for(var i = 1; i < arguments.length; i++) {
+        str = str.replace('{' + (i - 1) + '}', arguments[i]);
     }
     return str;
 };
