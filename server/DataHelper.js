@@ -3,12 +3,42 @@ var utils = require('./Utils'),
     path = require('path'),
     fs = require('fs'),
     mongoose = require('mongoose'),
-    Map = mongoose.model('map');
+    Map = mongoose.model('map'),
+    Player = mongoose.model('player');
 
-function getNewPlayer(position, socketId) {
-    return {
+function getPlayer(id, callback) {
+    Player.find({ id: id }, function(err, data) {
+        var player = err || data.length === 0 ? null : data[0];
+        if(player) {
+            player.lastLoginTime = utils.getNowTime();
+            player.save();
+        }
+        callback(player);
+    });
+};
+
+
+function getPlayerNewGameData(id, position, socketId, callback) {
+    getPlayer(id, function(playerData) {
+        playerData = playerData && extendPlayerWithNewGameData(playerData.toObject(), position, socketId);
+        callback(playerData);
+    });
+};
+
+function getNewPlayer(position, socketId, login) {
+    var player = {
         id: utils.getUid(),
         score: 0,
+        login: login || getGuestLogin(),
+        lastLoginTime: utils.getNowTime()
+    };
+    (new Player(player)).save();
+    extendPlayerWithNewGameData(player, position, socketId);
+    return player;
+};
+
+function extendPlayerWithNewGameData(player, position, socketId) {
+    var props = {
         socketId: socketId,
         lastUpdateTime: utils.getNowTime(),
         idDead: false,
@@ -22,7 +52,13 @@ function getNewPlayer(position, socketId) {
             y: position.y,
             moveDirection: ''
         }
-    }
+    };
+    utils.forEachEntryInObject(props, (key, data) => player[key] = data);
+    return player;
+};
+
+function getGuestLogin() {
+    return 'Guest_' + utils.getUid();
 };
 
 function getMapForPlayer(callback) {
@@ -118,5 +154,7 @@ function getRandomDimension() {
 
 module.exports = {
     getMapForPlayer: getMapForPlayer,
-    getNewPlayer: getNewPlayer
+    getNewPlayer: getNewPlayer,
+    getPlayer: getPlayer,
+    getPlayerNewGameData: getPlayerNewGameData
 };

@@ -1,6 +1,6 @@
 const ROOM_UPDATE_INTERVAL = 100,
     BULLET_LIFE_TIME = 2000,
-    PLAYER_DROP_TIMEOUT = 5000;
+    PLAYER_DROP_TIMEOUT = 10000;
 
 var io = require('socket.io').listen(8100),
     utils = require('./Utils'),
@@ -11,8 +11,8 @@ var io = require('socket.io').listen(8100),
 
 module.exports = function(app) {
     io.sockets.on('connection', (socket) => {
-        socket.on('joinRoom', function() {
-            onSocketJoinRoom(socket);
+        socket.on('joinGame', function(data) {
+            onSocketJoinGame(socket, data.login, data.id);
         });
         socket.on('shot', onSocketShot);
         socket.on('playerInfo', onSocketPlayerInfo);
@@ -24,23 +24,46 @@ module.exports = function(app) {
     setInterval(processRoomsState, ROOM_UPDATE_INTERVAL);
 };
 
-function onSocketJoinRoom(socket) {
+function onSocketJoinGame(socket, login, id) {
+    findRoomForPlayer(id, function(room) {
+        var player = room.players[id],
+            emitJoinGameFn = () => emitJoinGame(socket, room, player);
+        if(player) {
+            player.socketId = socket.id;
+            emitJoinGame(socket, room, player);
+            emitJoinGameFn();
+        } else {
+            var position = getPlayerSpawnPosition(room);
+            dataHelper.getPlayerNewGameData(id, position, socket.id, function(playerData) {
+                player = playerData || dataHelper.getNewPlayer(position, socket.id, login);
+                addNewPlayerToRoom(room, socket, player);
+                emitJoinGameFn();
+            });
+        }
+    });
+};
+
+function findRoomForPlayer(playerId, callback) {
     if(!rooms.length) {
         createNewRoom(function(room) {
             rooms.push(room);
             roomsCache[room.id] = room;
-            emitRoomData(socket, room);
+            callback(room);
         });
     } else {
-        emitRoomData(socket, rooms[0]);
+        var room = rooms.find((r) => r.players[playerId]);
+        callback(room || rooms[0]);
     }
 };
+
 
 function onSocketPlayerInfo(data) {
     var player = getPlayerBySocketData(data);
     if(player) {
         !player.idDead && (player.positionInfo = data.positionInfo);
         player.lastUpdateTime = utils.getNowTime();
+    } else {
+        this.emit('forceReload');
     }
 };
 
@@ -176,8 +199,8 @@ function processPlayerDamage(player, damage) {
 
 };
 
-function emitRoomData(socket, room) {
-    socket.emit('roomData', { map: room.map, roomId: room.id, player: addNewPlayerToRoom(socket, room) });
+function emitJoinGame(socket, room, player) {
+    socket.emit('joinGameData', { map: room.map, roomId: room.id, player: player });
 };
 
 function createNewRoom(callback) {
@@ -192,8 +215,7 @@ function createNewRoom(callback) {
     });
 };
 
-function addNewPlayerToRoom(socket, room) {
-    var player = dataHelper.getNewPlayer(getPlayerSpawnPosition(room), socket.id);
+function addNewPlayerToRoom(room, socket, player) {
     room.players[player.id] = player;
     socket.join(room.id);
     return player;

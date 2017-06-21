@@ -5,25 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=0.7, user-scalable=0"/>
 </head>
 <body>
-<div id="FPSCounter" class="fps-counter"></div>
-<div class="player-info-panel">
-    <div id="PlayerHpBar" class="hp-bar"></div>
-    <div id="PlayerWeaponBar" class="image-with-numbers-panel">
-        <img src="images/icons/weapons/pistol.png"/>
-        <div class="numbers"></div>
+<div id="LoginPanel" class="login-panel">
+    <h1>GUN AND RUN</h1>
+    <div id="ContinueGameItemsContainer" class="hidden continue-game-items-container">
+        <button id="ContinueGameButton"></button>
+        <br>
+        <span>or start a new game:</span>
     </div>
-    <div id="PlayerArmorPanel" class="image-with-numbers-panel">
-        <img src="images/icons/armor.png"/>
-        <div class="numbers"></div>
-    </div>
+    <input id="LoginInput" type="text" placeholder="Nickname" class="red-text">
+    <button id="StartGameButton" type="submit">PLAY</button>
 </div>
 
-<div class="mobile-interface-container">
-    <div id="MobileStick" class="mobile-control-stick">
-        <img class="main-circle" src="/images/icons/circle.svg">
-        <img id="MobileStickPointer" class="main-circle-pointer" src="/images/icons/circle_pointer.svg">
+<div id="GameInterfaceContainer" class="hidden">
+    <div id="FPSCounter" class="fps-counter"></div>
+    <div class="player-info-panel">
+        <div id="PlayerHpBar" class="hp-bar"></div>
+        <div id="PlayerWeaponBar" class="image-with-numbers-panel">
+            <img src="images/icons/weapons/pistol.png"/>
+            <div class="numbers"></div>
+        </div>
+        <div id="PlayerArmorPanel" class="image-with-numbers-panel">
+            <img src="images/icons/armor.png"/>
+            <div class="numbers"></div>
+        </div>
     </div>
-    <img id="MobileShotButton" class="shot-button" src="/images/icons/aim.svg">
+
+    <div class="mobile-interface-container">
+        <div id="MobileStick" class="mobile-control-stick">
+            <img class="main-circle" src="/images/icons/circle.svg">
+            <img id="MobileStickPointer" class="main-circle-pointer" src="/images/icons/circle_pointer.svg">
+        </div>
+        <img id="MobileShotButton" class="shot-button" src="/images/icons/aim.svg">
+    </div>
 </div>
 
 <script type="text/javascript">

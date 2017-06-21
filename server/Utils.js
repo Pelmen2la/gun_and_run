@@ -38,11 +38,24 @@ function stringFormat(str, args) {
     return str;
 };
 
+function createRequest(url, method, data, callback) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url, true);
+    data && xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+            callback(JSON.parse(xhr.responseText));
+        }
+    };
+    xhr.send(data ? 'data=' + JSON.stringify(data) : null);
+};
+
 module.exports = {
     getUid: getUid,
     getGuid: getGuid,
     getRandomInt: getRandomInt,
     getNowTime: getNowTime,
     forEachEntryInObject: forEachEntryInObject,
-    stringFormat: stringFormat
+    stringFormat: stringFormat,
+    createRequest: createRequest
 };

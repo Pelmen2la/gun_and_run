@@ -1,5 +1,46 @@
-import utils from './../../server/Utils.js'
+import utils from './../../server/Utils.js';
+import game from './game.js';
 import consts from './consts.js';
+
+var gbId = document.getElementById.bind(document);
+
+document.addEventListener('DOMContentLoaded', function() {
+    var data = game.getGameSavedData();
+    data && utils.createRequest('/player/' + data.playerId, 'GET', null, function(playerData) {
+        setDomElementVisibility(gbId('ContinueGameItemsContainer'), !!playerData);
+        if(playerData) {
+            var text = utils.stringFormat('Continue game as <span class="red-text">{0}</span>', playerData.login);
+            gbId('ContinueGameButton').innerHTML = text;
+        }
+    });
+});
+
+function setLoginPanelVisibility(isVisible) {
+    setDomElementVisibility(gbId('LoginPanel'), isVisible);
+};
+
+function setGameInterfaceVisibility(isVisible) {
+    setDomElementVisibility(gbId('GameInterfaceContainer'), isVisible);
+};
+
+function setDomElementVisibility(element, isVisible) {
+    element.classList[isVisible ? 'remove' : 'add']('hidden');
+};
+
+function addOnLoginAction(fn) {
+    var loginInput = gbId('LoginInput'),
+        loginFn = function() {
+            fn(loginInput.value, null);
+        };
+    loginInput.onkeydown = function(e) {
+        e.keyCode === 13 && loginFn();
+    };
+    gbId('StartGameButton').onclick = loginFn;
+    gbId('ContinueGameButton').onclick = function() {
+        fn('', game.getGameSavedData().playerId);
+    };
+
+};
 
 function updatePlayerInterface(playerData, selectedWeaponData) {
     updatePlayerEndurancePanels(playerData);
@@ -22,17 +63,17 @@ function updatePlayerHpPanel(hp) {
         hpHeartsHtml += getHeartHtml();
     }
     hp % 20 && (hpHeartsHtml += getHeartHtml(true));
-    document.getElementById('PlayerHpBar').innerHTML = hpHeartsHtml;
+    gbId('PlayerHpBar').innerHTML = hpHeartsHtml;
 };
 
 function updatePlayerWeaponPanel(selectedWeaponData) {
-    var panel = document.getElementById('PlayerWeaponBar');
+    var panel = gbId('PlayerWeaponBar');
     panel.querySelector('img').src = utils.stringFormat('{0}{1}.png', consts.WEAPONS_ICONS_PATH, selectedWeaponData.name);
     panel.querySelector('.numbers').innerHTML = selectedWeaponData.ammo == null ? '' : getNumberHtml(selectedWeaponData.ammo);
 };
 
 function updatePlayerArmorPanel(armorCount) {
-    var panel = document.getElementById('PlayerArmorPanel');
+    var panel = gbId('PlayerArmorPanel');
     panel.style.display = armorCount ? '' : 'none';
     panel.querySelector('.numbers').innerHTML = getNumberHtml(armorCount);
 };
@@ -46,8 +87,11 @@ function getNumberHtml(number) {
 };
 
 export default {
+    addOnLoginAction: addOnLoginAction,
     updatePlayerWeaponPanel: updatePlayerWeaponPanel,
     updatePlayerEndurancePanels: updatePlayerEndurancePanels,
-    updatePlayerInterface: updatePlayerInterface
+    updatePlayerInterface: updatePlayerInterface,
+    setLoginPanelVisibility: setLoginPanelVisibility,
+    setGameInterfaceVisibility: setGameInterfaceVisibility,
 };
 

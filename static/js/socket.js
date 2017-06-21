@@ -5,8 +5,8 @@ var socket;
 function init(handlers, callback) {
     socket = io(window.location.protocol + '//' + window.location.hostname + ':8100');
     socket.on('connect', function() {
-        var eventNames = ['roomData', 'playersData', 'otherPlayerShot', 'respawn', 'playerLeave', 'score',
-            'enduranceInfo', 'weaponsInfo', 'enduranceItemPickuped', 'weaponItemPickuped'];
+        var eventNames = ['joinGameData', 'playersData', 'otherPlayerShot', 'respawn', 'playerLeave', 'score',
+            'enduranceInfo', 'weaponsInfo', 'enduranceItemPickuped', 'weaponItemPickuped', 'forceReload'];
         eventNames.forEach(function(eventName) {
             var handlerName= 'on' + eventName[0].toUpperCase() + eventName.substring(1);
             socket.on(eventName, handlers[handlerName]);

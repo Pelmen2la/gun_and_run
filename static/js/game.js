@@ -28,7 +28,9 @@ function create() {
     game.renderer.renderSession.roundPixels = true;
     controls.init(getControlsHandlers());
     socket.init(getSocketHandlers(), function() {
-        socket.emit('joinRoom');
+        userInterface.addOnLoginAction(function(login, id) {
+            socket.emit('joinGame', { login: login, id: id });
+        });
     });
     window.setInterval(checkCollision, 50);
 };
@@ -71,7 +73,7 @@ function checkCollision() {
     }
 };
 
-function initData(data) {
+function initGameData(data) {
     map.drawMap(data.map);
     gameData = {
         map: data.map,
@@ -116,8 +118,13 @@ function shot(weaponName) {
 
 function getSocketHandlers() {
     return {
-        onRoomData: function(data) {
-            initData(data);
+        onJoinGameData: function(data) {
+            setGameSavedData({
+                playerId: data.player.id
+            });
+            initGameData(data);
+            userInterface.setGameInterfaceVisibility(true);
+            userInterface.setLoginPanelVisibility(false);
             window.setInterval(sendPlayerInfo, 100);
             updatePlayerInterface();
         },
@@ -161,8 +168,19 @@ function getSocketHandlers() {
         },
         onWeaponItemPickuped: function(data) {
             map.hideWeaponItem(data.itemId, data.time);
+        },
+        onForceReload: function() {
+            location.reload();
         }
     }
+};
+
+function getGameSavedData(data) {
+    return localStorage.gunAndRunData ? JSON.parse(localStorage.gunAndRunData) : null;
+};
+
+function setGameSavedData(data) {
+    localStorage.gunAndRunData = JSON.stringify(data);
 };
 
 function sendPlayerInfo() {
@@ -252,5 +270,6 @@ function addShot(data) {
 };
 
 export default {
+    getGameSavedData: getGameSavedData,
     instance: game
 };
