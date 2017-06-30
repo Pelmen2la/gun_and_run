@@ -29,7 +29,11 @@ var mongoose = require('mongoose'),
             lastPickupTime: Number,
             x: Number,
             y: Number
-        }]
+        }],
+        portal: {
+            x: Number,
+            y: Number
+        }
     });
 
 mongoose.model('map', Map);

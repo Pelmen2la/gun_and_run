@@ -70,10 +70,19 @@ function checkCollision() {
         game.physics.arcade.collide(map.getWeaponItemsGroup(), gameData.player, function(player, item) {
             processPickupItem(player.data.id, item.data.id, 'Weapon');
         });
+        game.physics.arcade.collide(map.getPortal(), gameData.player, function(player, item) {
+            window.clearTimeout(gameData.allowPortalTimeoutId);
+            userInterface.setPortalIconVisibility(true);
+            gameData.allowPortalTimeoutId = window.setTimeout(function() {
+                gameData.allowPortalTimeoutId = null;
+                userInterface.setPortalIconVisibility(false);
+            }, 400);
+        });
     }
 };
 
 function initGameData(data) {
+    game.world.removeAll();
     map.drawMap(data.map);
     gameData = {
         map: data.map,
@@ -87,8 +96,10 @@ function initGameData(data) {
 };
 
 function getControlsHandlers() {
-    var handlers = {};
-    handlers['onShotButtonPress'] = onShotButtonPress;
+    var handlers = {
+        onShotButtonPress: onShotButtonPress,
+        onPortalButtonDown: onPortalButtonDown
+    };
     return handlers;
 };
 
@@ -105,6 +116,13 @@ function onShotButtonPress() {
         }
         shot(playerWeapon.name);
         updatePlayerInterface();
+    }
+};
+
+function onPortalButtonDown() {
+    if(gameData.allowPortalTimeoutId) {
+        window.clearInterval(gameData.sendPlayerInfoIntevalId);
+        socket.emit('portal', { playerId: gameData.player.data.id, roomId: gameData.roomId });
     }
 };
 
@@ -125,8 +143,12 @@ function getSocketHandlers() {
             initGameData(data);
             userInterface.setGameInterfaceVisibility(true);
             userInterface.setLoginPanelVisibility(false);
-            window.setInterval(sendPlayerInfo, 100);
+            gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
             updatePlayerInterface();
+        },
+        onJoinRoomData: function(data) {
+            initGameData(data);
+            gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
         },
         onPlayersData: function(data) {
             updateOtherPlayersPosition(data);

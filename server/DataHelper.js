@@ -1,3 +1,5 @@
+'use strict'
+
 var utils = require('./Utils'),
     weapons = require('./Weapons'),
     path = require('path'),
@@ -61,70 +63,86 @@ function getGuestLogin() {
     return 'Guest_' + utils.getUid();
 };
 
-function getMapForPlayer(callback) {
-    Map.remove({}, function() {
-        Map.findOne({}, function(err, mapData) {
-            if(!mapData) {
-                generateNewMap(callback);
-            } else {
-                callback(mapData.toObject())
-            }
-        });
-    });
-};
-
-function generateNewMap(callback) {
+function getNewMap(callback) {
     var tiles = [],
         enduranceItems = [],
         weaponItems = [],
+        wallsCache = {},
         tileDimension = 32,
         bordersWidth = tileDimension * 6,
         xDimension = getRandomDimension(),
         yDimension = getRandomDimension(),
-        getBaseTileData = function(x, y, withOffset) {
-            var offset = withOffset ? tileDimension / 2 : 0;
+        getBaseTileData = function(x, y, offsetX, offsetY) {
             return {
-                x: bordersWidth + x * tileDimension - offset,
-                y: bordersWidth + y * tileDimension - offset
+                x: bordersWidth + x * tileDimension - (offsetX || 0),
+                y: bordersWidth + y * tileDimension - (offsetY || 0)
             }
         },
-        getItemTileData = function(x, y, withOffset) {
-            var data = getBaseTileData(x, y, withOffset);
+        getItemTileData = function(x, y) {
+            var data = getBaseTileData(x, y,  tileDimension / 2,  tileDimension / 2);
             data.id = utils.getUid();
             data.lastPickupTime = 0;
             return data;
+        },
+        getCoordsStringCode = function(x, y) {
+            return utils.stringFormat('{0}-{1}', x, y);
         };
+
     for(var x = 0; x < xDimension; x++) {
         for(var y = 0; y < yDimension; y++) {
-            var tile = getBaseTileData(x, y, false);
+            var tile = getBaseTileData(x, y);
             tile.tileType = Math.random() < 0.05 ? 'wall' : 'ground';
             tiles.push(tile);
+            wallsCache[getCoordsStringCode(x, y)] = tile.tileType === 'wall';
+        }
+    }
 
-            var isNearBorders = x <= 2 || y <= 2 || x >= xDimension -2 || y >= yDimension - 2,
-                checkIsItemNear = function(x, y, items) {
-                    return items.find(function(item) {
-                        return Math.abs(item.x / tileDimension - x) < utils.getRandomInt(10, 20)
-                            && Math.abs(item.y / tileDimension - y) < utils.getRandomInt(10, 20);
-                    });
-                },
-                isEnduranceItemNear = checkIsItemNear(x, y, enduranceItems),
-                isWeaponItemNear = checkIsItemNear(x, y, weaponItems),
-                canCreateItem = !isNearBorders && tile.tileType !== 'wall' && !isEnduranceItemNear && !isWeaponItemNear;
-            if(canCreateItem && Math.random() < 0.05) {
-                var item = getItemTileData(x, y, true);
-                item.itemType = Math.random() < 0.5 ? 'armor' : 'hp';
+    var itemSectorsCount = [utils.getRandomInt(3, 2), utils.getRandomInt(3, 2)],
+        sectorXSize = Math.round(xDimension / itemSectorsCount[0]),
+        sectorYSize = Math.round(yDimension / itemSectorsCount[1]),
+        isNearWall = function(x, y) {
+            for(var i = -1; i <= 1; i++) {
+                for(var j = -1; j <= 1; j++) {
+                    if(wallsCache[getCoordsStringCode(x + i, y + j)]) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        },
+        isNearBorder = function(x, y) {
+            return x <= 2 || y <= 2 || x >= xDimension - 2 || y >= yDimension - 2;
+        },
+        isNearBarrier = function(pos) {
+            return !pos || isNearWall(pos[0], pos[1]) || isNearBorder(pos[0], pos[1]);
+        };
+
+    for(var i = 0; i < itemSectorsCount[0]; i++) {
+        for(var j = 0; j < itemSectorsCount[1]; j++) {
+            let itemPos;
+            while(isNearBarrier(itemPos)) {
+                itemPos = [utils.getRandomInt((i + 1) * sectorXSize, i * sectorXSize),
+                            utils.getRandomInt((j + 1) * sectorYSize, j * sectorYSize)];
+            };
+            var item = getItemTileData(itemPos[0], itemPos[1]);
+            if(utils.flipCoin()) {
+                item.itemType = utils.flipCoin() ? 'armor' : 'hp';
                 item.respawnTime = 10000;
                 enduranceItems.push(item);
-            } else if(canCreateItem && Math.random() < 0.05) {
-                var item = getItemTileData(x, y, true),
-                    weaponsArr = weapons.getNotStandardWeapons(),
+            } else {
+                var weaponsArr = weapons.getNotStandardWeapons(),
                     randomWeapon = weaponsArr[utils.getRandomInt(weaponsArr.length - 1)];
                 item.name = randomWeapon.name;
                 item.respawnTime = 10000;
                 weaponItems.push(item);
             }
         }
-    };
+    }
+
+    var portalPos;
+    while(isNearBarrier(portalPos)) {
+        portalPos = [utils.getRandomInt(xDimension), utils.getRandomInt(yDimension)];
+    }
 
     fs.readdir(path.join(global.appRoot, '/static/images/landscape/'), (err, folders) => {
         var map = Map({
@@ -139,7 +157,8 @@ function generateNewMap(callback) {
             },
             tiles: tiles,
             enduranceItems: enduranceItems,
-            weaponItems: weaponItems
+            weaponItems: weaponItems,
+            portal: getBaseTileData(portalPos[0], portalPos[1], 33 / 2, 55 / 2)
         });
         map.save((err, mapData) => {
                 callback(mapData.toObject());
@@ -153,7 +172,7 @@ function getRandomDimension() {
 };
 
 module.exports = {
-    getMapForPlayer: getMapForPlayer,
+    getNewMap: getNewMap,
     getNewPlayer: getNewPlayer,
     getPlayer: getPlayer,
     getPlayerNewGameData: getPlayerNewGameData

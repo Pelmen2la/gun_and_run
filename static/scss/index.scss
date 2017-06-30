@@ -105,6 +105,26 @@ input, select, textarea, button{ font-size: inherit; color: inherit; font-family
     }
 }
 
+.portal-icon {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    height: 90px;
+    width: 58px;
+    background-image: url('/images/icons/portal.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.mobile .portal-icon {
+    bottom: 27%;
+    right: 20px;
+    width: 29px;
+    height: 45px;
+    background-image: url('/images/icons/portal_mobile.png');
+    z-index: 5;
+}
+
 .mobile-interface-container {
     position: absolute;
     width: 100%;
@@ -114,8 +134,9 @@ input, select, textarea, button{ font-size: inherit; color: inherit; font-family
     .mobile-control-stick {
         height: 30%;
         position: fixed;
-        bottom: 25px;
+        bottom: 7%;
         left: 25px;
+        z-index: 5;
 
         img {
             &.main-circle {
@@ -134,8 +155,9 @@ input, select, textarea, button{ font-size: inherit; color: inherit; font-family
     .shot-button {
         position: fixed;
         right: 35px;
-        bottom: 35px;
+        bottom: 7%;
         height: 15%;
+        z-index: 5;
     }
 }
 

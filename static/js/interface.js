@@ -19,6 +19,10 @@ function setLoginPanelVisibility(isVisible) {
     setDomElementVisibility(gbId('LoginPanel'), isVisible);
 };
 
+function setPortalIconVisibility(isVisible) {
+    setDomElementVisibility(document.getElementById('PortalIcon'), isVisible);
+};
+
 function setGameInterfaceVisibility(isVisible) {
     setDomElementVisibility(gbId('GameInterfaceContainer'), isVisible);
 };
@@ -93,5 +97,6 @@ export default {
     updatePlayerInterface: updatePlayerInterface,
     setLoginPanelVisibility: setLoginPanelVisibility,
     setGameInterfaceVisibility: setGameInterfaceVisibility,
+    setPortalIconVisibility: setPortalIconVisibility
 };
 

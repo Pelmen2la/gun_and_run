@@ -8,8 +8,10 @@ var cursors = {},
 function init(handlers) {
     cursors = game.instance.input.keyboard.createCursorKeys();
     game.instance.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
+    game.instance.input.keyboard.addKey(Phaser.Keyboard.R).processKeyDown = handlers.onPortalButtonDown;
     initMobileStick();
     initMobileShotButton(handlers.onShotButtonPress);
+    touch(document.getElementById('PortalIcon')).on('start', handlers.onPortalButtonDown);
 };
 
 function initMobileShotButton(shotFn) {

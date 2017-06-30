@@ -15,7 +15,12 @@ function getGuid() {
 };
 
 function getRandomInt(max, min) {
-    return (min || 0) + Math.round(max * Math.random());
+    min = min || 0;
+    return min + Math.round((max - min) * Math.random());
+};
+
+function flipCoin() {
+    return Math.random() < 0.5;
 };
 
 function forEachEntryInObject(o, callback) {
@@ -38,6 +43,11 @@ function stringFormat(str, args) {
     return str;
 };
 
+function extendObject(obj, props) {
+    forEachEntryInObject(props, (key, value) => obj[key] = value);
+    return obj;
+};
+
 function createRequest(url, method, data, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
@@ -54,8 +64,10 @@ module.exports = {
     getUid: getUid,
     getGuid: getGuid,
     getRandomInt: getRandomInt,
+    flipCoin: flipCoin,
     getNowTime: getNowTime,
     forEachEntryInObject: forEachEntryInObject,
     stringFormat: stringFormat,
+    extendObject: extendObject,
     createRequest: createRequest
 };

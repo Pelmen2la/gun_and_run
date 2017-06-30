@@ -1,5 +1,6 @@
 const ROOM_UPDATE_INTERVAL = 100,
     BULLET_LIFE_TIME = 2000,
+    ROOM_MAX_PLAYERS_COUNT = 10,
     PLAYER_DROP_TIMEOUT = 10000;
 
 var io = require('socket.io').listen(8100),
@@ -20,17 +21,17 @@ module.exports = function(app) {
         socket.on('respawnComplete', onSocketRespawnComplete);
         socket.on('pickupEnduranceItem', onSocketPickupEnduranceItem);
         socket.on('pickupWeaponItem', onSocketPickupWeaponItem);
+        socket.on('portal', onSocketPortal);
     });
     setInterval(processRoomsState, ROOM_UPDATE_INTERVAL);
 };
 
 function onSocketJoinGame(socket, login, id) {
-    findRoomForPlayer(id, function(room) {
+    findRoomForPlayer(id, null, function(room) {
         var player = room.players[id],
             emitJoinGameFn = () => emitJoinGame(socket, room, player);
         if(player) {
             player.socketId = socket.id;
-            emitJoinGame(socket, room, player);
             emitJoinGameFn();
         } else {
             var position = getPlayerSpawnPosition(room);
@@ -43,16 +44,25 @@ function onSocketJoinGame(socket, login, id) {
     });
 };
 
-function findRoomForPlayer(playerId, callback) {
-    if(!rooms.length) {
-        createNewRoom(function(room) {
-            rooms.push(room);
-            roomsCache[room.id] = room;
-            callback(room);
-        });
+function findRoomForPlayer(playerId, exceptRoomId, callback) {
+    var room = rooms.find((r) => r.players[playerId]);
+    if(room && !exceptRoomId) {
+        callback(room);
     } else {
-        var room = rooms.find((r) => r.players[playerId]);
-        callback(room || rooms[0]);
+        var roomCandidates = rooms.filter(function(r) {
+            var playersCount = 0;
+            utils.forEachEntryInObject(r.players, () => playersCount++);
+            return r.id !== exceptRoomId && playersCount < ROOM_MAX_PLAYERS_COUNT;
+        });
+        if(roomCandidates.length) {
+            callback(roomCandidates[utils.getRandomInt(roomCandidates.length - 1)]);
+        } else {
+            createNewRoom(function(room) {
+                rooms.push(room);
+                roomsCache[room.id] = room;
+                callback(room);
+            });
+        }
     }
 };
 
@@ -151,6 +161,22 @@ function tryPickupItem(data, itemType, callback) {
     }
 };
 
+function onSocketPortal(data) {
+    var socket = this;
+        currentRoom = getRoomBySocketData(data),
+        player = getPlayerBySocketData(data);
+    if(currentRoom && player) {
+        findRoomForPlayer(player.id, currentRoom.id, function(newRoom) {
+            socket.leave(currentRoom.id);
+            delete currentRoom.players[player.id];
+
+            addNewPlayerToRoom(newRoom, socket, player);
+            utils.extendObject(player.positionInfo, getPlayerSpawnPosition(newRoom));
+            socket.emit('joinRoomData', getJoinRoomData(newRoom, player));
+        });
+    }
+};
+
 function getRoomBySocketData(data) {
     return getRoom(data.roomId);
 };
@@ -200,7 +226,11 @@ function processPlayerDamage(player, damage) {
 };
 
 function emitJoinGame(socket, room, player) {
-    socket.emit('joinGameData', { map: room.map, roomId: room.id, player: player });
+    socket.emit('joinGameData', getJoinRoomData(room, player));
+};
+
+function getJoinRoomData(room, player) {
+    return { map: room.map, roomId: room.id, player: player };
 };
 
 function createNewRoom(callback) {
@@ -209,7 +239,7 @@ function createNewRoom(callback) {
         players: {},
         bullets: {}
     };
-    dataHelper.getMapForPlayer(function(mapData) {
+    dataHelper.getNewMap(function(mapData) {
         room.map = mapData;
         callback(room);
     });

@@ -11,6 +11,7 @@ function loadResources() {
     load('ground', consts.TILES_PATH + 'ground.png', 32, 32);
     load('wall', consts.TILES_PATH + 'wall.png', 32, 32);
     load('blank', consts.TILES_PATH + 'blank.png', 1, 1);
+    load('greenportal', consts.SPRITES_PATH +'portals/green.png', 33, 52);
 
     for(var key in window.gameLandscapeProperties) {
         var landscapeProps = window.gameLandscapeProperties[key];
@@ -105,14 +106,19 @@ function createPlayer(data) {
     return player;
 };
 
-function createItem(data, spriteName, framesCount, fps) {
+function createAnimatedObject(xy, spriteName, framesCount, fps) {
     var framesArr = [],
-        item = getSprite(spriteName, data.x, data.y);
+        obj = getSprite(spriteName, xy.x, xy.y);
     for(var i = 0; i < framesCount; i++) {
         framesArr.push(i);
     }
-    item.animations.add('rotate', framesArr, fps, true);
-    item.animations.play('rotate');
+    obj.animations.add('anim', framesArr, fps, true);
+    obj.animations.play('anim');
+    return obj;
+};
+
+function createItem(data, spriteName, framesCount, fps) {
+    var item = createAnimatedObject(data, spriteName, framesCount, fps);
     item.data = {
         id: data.id,
         itemType: data.itemType,
@@ -181,5 +187,6 @@ export default {
     updatePlayerDirections: updatePlayerDirections,
     createBullet: createBullet,
     createEnduranceItem: createEnduranceItem,
-    createWeaponItem: createWeaponItem
+    createWeaponItem: createWeaponItem,
+    createAnimatedObject: createAnimatedObject
 };

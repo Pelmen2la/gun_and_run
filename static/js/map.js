@@ -2,7 +2,7 @@ import game from './game.js';
 import spritesFactory from './spritesFactory.js';
 import utils from './../../server/Utils.js'
 
-var groundGroup, wallGroup, enduranceItemsGroup, weaponItemsGroup;
+var groundGroup, wallGroup, enduranceItemsGroup, weaponItemsGroup, portal;
 
 function drawMap(mapData) {
     var borderW = mapData.bordersWidth;
@@ -24,6 +24,7 @@ function drawMap(mapData) {
     mapData.weaponItems.forEach(function(item) {
         weaponItemsGroup.add(spritesFactory.createWeaponItem(item));
     });
+    portal = spritesFactory.createAnimatedObject({ x: mapData.portal.x, y: mapData.portal.y }, 'greenportal', 8, 5);
 
     var worldWidth = borderW * 2 + mapData.tileDimension * mapData.dimension.x,
         worldHeight = borderW * 2 + mapData.tileDimension * mapData.dimension.y;
@@ -54,6 +55,10 @@ function getWeaponItemsGroup() {
     return weaponItemsGroup;
 };
 
+function getPortal() {
+    return portal;
+};
+
 function hideItem(itemGroup, itemId, startHideTime) {
     var item = itemGroup.children.find((item) => item.data.id === itemId);
     item && spritesFactory.hideSprite(item, item.data.respawnTime - (utils.getNowTime() - startHideTime));
@@ -71,6 +76,7 @@ export default {
     drawMap: drawMap,
     getWallGroup: getWallGroup,
     getEnduranceItemsGroup: getEnduranceItemsGroup,
+    getPortal: getPortal,
     hideEnduranceItem: hideEnduranceItem,
     getWeaponItemsGroup: getWeaponItemsGroup,
     hideWeaponItem: hideWeaponItem
