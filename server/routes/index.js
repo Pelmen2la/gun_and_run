@@ -1,19 +1,31 @@
 var fs = require('fs'),
     path = require('path'),
     MobileDetect = require('mobile-detect'),
+    dataHelper = require('./../DataHelper'),
+    characterNames = [],
     landscapeProperties = {};
 
-const LANDSCAPE_FOLDER_PATH = path.join(global.appRoot, '/static/images/landscape/');
+const LANDSCAPE_FOLDER_PATH = path.join(global.appRoot, '/static/images/landscape/'),
+    CHARACTERS_GIF_FOLDER_PATH = path.join(global.appRoot, '/static/images/sprites/characters/gif/');
 
 module.exports = function(app) {
     app.get('/', function(req, res) {
         getLandscapeProperties(function(landscapeProperties) {
-            fs.readFile(path.join(global.appRoot, '/static/html/app.html'), 'utf8', function(err, indexPageHtml) {
-                var isMobile = (new MobileDetect(req.headers['user-agent'])).mobile();
-                indexPageHtml = indexPageHtml.replace('{{IS_MOBILE_CLASS}}', isMobile ? 'mobile' : '');
-                indexPageHtml = indexPageHtml.replace('{{GAME_LANDSCAPE_PROPERTIES}}', JSON.stringify(landscapeProperties));
-                res.send(indexPageHtml);
+            getCharacterNames(function(characterNames) {
+                fs.readFile(path.join(global.appRoot, '/static/html/app.html'), 'utf8', function(err, indexPageHtml) {
+                    var isMobile = (new MobileDetect(req.headers['user-agent'])).mobile();
+                    indexPageHtml = indexPageHtml.replace('{{IS_MOBILE_CLASS}}', isMobile ? 'mobile' : '');
+                    indexPageHtml = indexPageHtml.replace('{{GAME_LANDSCAPE_PROPERTIES}}', JSON.stringify(landscapeProperties));
+                    indexPageHtml = indexPageHtml.replace('{{GAME_CHARACTER_NAMES}}', JSON.stringify(characterNames));
+                    res.send(indexPageHtml);
+                });
             });
+        });
+    });
+
+    app.get('/player/:id/', function(req, res) {
+        dataHelper.getPlayer(req.params.id, function(data) {
+            res.send(data);
         });
     });
 };
@@ -33,4 +45,12 @@ function getLandscapeProperties(callback) {
         });
         callback(landscapeProperties);
     });
+};
+
+function getCharacterNames(callback) {
+    characterNames.length ? callback(characterNames) :
+        fs.readdir(CHARACTERS_GIF_FOLDER_PATH, (err, files) => {
+            characterNames = files.map((f) => f.split('.')[0]);
+            callback(characterNames);
+        });
 };

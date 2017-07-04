@@ -12,6 +12,10 @@
         <br>
         <span>or start a new game:</span>
     </div>
+    <span class="avatar-container">
+        <img id="CharacterAvatar" src="images/sprites/characters/gif/alex.gif" class="">
+        <img src="/images/icons/pointer.gif" class="pointer">
+    </span>
     <input id="LoginInput" type="text" placeholder="Nickname" class="red-text">
     <button id="StartGameButton" type="submit">PLAY</button>
 </div>
@@ -43,6 +47,7 @@
 
 <script type="text/javascript">
     window.gameLandscapeProperties = JSON.parse('{{GAME_LANDSCAPE_PROPERTIES}}');
+    window.characterNames = JSON.parse('{{GAME_CHARACTER_NAMES}}');
 </script>
 <script src="/dist/js/app.js"></script>
 </body>

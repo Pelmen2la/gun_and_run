@@ -5,13 +5,14 @@ import weapons from './../../server/Weapons.js'
 
 function loadResources() {
     var load = game.instance.load.spritesheet.bind(game.instance.load);
-    load('beans', consts.SPRITES_PATH +  'characters/beans.png', 27, 32);
     load('hp', consts.SPRITES_PATH +'items/hp.png', 32, 32);
     load('armor', consts.SPRITES_PATH + 'items/armor.png', 32, 32);
     load('ground', consts.TILES_PATH + 'ground.png', 32, 32);
     load('wall', consts.TILES_PATH + 'wall.png', 32, 32);
     load('blank', consts.TILES_PATH + 'blank.png', 1, 1);
     load('greenportal', consts.SPRITES_PATH +'portals/green.png', 33, 52);
+
+    window.characterNames.forEach((n) => load(n, utils.stringFormat('{0}{1}/{2}.png', consts.SPRITES_PATH,  'characters', n), 27, 32));
 
     for(var key in window.gameLandscapeProperties) {
         var landscapeProps = window.gameLandscapeProperties[key];
@@ -87,7 +88,7 @@ function getSpriteAnimProps(moveDirection) {
 
 function createPlayer(data) {
     var pos = data.positionInfo,
-        player = getSprite('beans', pos.x, pos.y);
+        player = getSprite(data.characterName, pos.x, pos.y);
     player.data = {
         id: data.id,
         weapons: data.weapons,

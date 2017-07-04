@@ -3,7 +3,8 @@ var mongoose = require('mongoose'),
         id: String,
         lastLoginTime: Number,
         login: String,
-        score: Number
+        score: Number,
+        characterName: String
     });
 
 mongoose.model('player', Player);

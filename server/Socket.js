@@ -12,9 +12,7 @@ var io = require('socket.io').listen(8100),
 
 module.exports = function(app) {
     io.sockets.on('connection', (socket) => {
-        socket.on('joinGame', function(data) {
-            onSocketJoinGame(socket, data.login, data.id);
-        });
+        socket.on('joinGame', onSocketJoinGame);
         socket.on('shot', onSocketShot);
         socket.on('playerInfo', onSocketPlayerInfo);
         socket.on('hit', onSocketHit);
@@ -26,17 +24,19 @@ module.exports = function(app) {
     setInterval(processRoomsState, ROOM_UPDATE_INTERVAL);
 };
 
-function onSocketJoinGame(socket, login, id) {
-    findRoomForPlayer(id, null, function(room) {
-        var player = room.players[id],
+function onSocketJoinGame(data) {
+    var socket = this,
+        playerId = data.playerId;
+    findRoomForPlayer(playerId, null, function(room) {
+        var player = room.players[playerId],
             emitJoinGameFn = () => emitJoinGame(socket, room, player);
         if(player) {
             player.socketId = socket.id;
             emitJoinGameFn();
         } else {
             var position = getPlayerSpawnPosition(room);
-            dataHelper.getPlayerNewGameData(id, position, socket.id, function(playerData) {
-                player = playerData || dataHelper.getNewPlayer(position, socket.id, login);
+            dataHelper.getPlayerNewGameData(playerId, position, socket.id, function(playerData) {
+                player = playerData || dataHelper.getNewPlayer(position, socket.id, data.login, data.characterName);
                 addNewPlayerToRoom(room, socket, player);
                 emitJoinGameFn();
             });

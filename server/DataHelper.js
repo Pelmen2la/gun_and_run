@@ -27,11 +27,12 @@ function getPlayerNewGameData(id, position, socketId, callback) {
     });
 };
 
-function getNewPlayer(position, socketId, login) {
+function getNewPlayer(position, socketId, login, characterName) {
     var player = {
         id: utils.getUid(),
         score: 0,
         login: login || getGuestLogin(),
+        characterName: characterName,
         lastLoginTime: utils.getNowTime()
     };
     (new Player(player)).save();

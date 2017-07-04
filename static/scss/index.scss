@@ -7,7 +7,7 @@ body {
 input, select, textarea, button{ font-size: inherit; color: inherit; font-family: inherit; }
 
 *.hidden {
-    display: none;
+    display: none !important;
 }
 
 *.red-text {
@@ -65,7 +65,20 @@ input, select, textarea, button{ font-size: inherit; color: inherit; font-family
             font-size: 0.7em;
         }
     }
+}
 
+.avatar-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    img:not(.pointer) {
+        height: 64px;
+    }
+    img.pointer {
+        top: 15px;
+        right: -60px;
+        position: absolute;
+    }
 }
 
 .fps-counter {

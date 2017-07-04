@@ -2,12 +2,18 @@ import utils from './../../server/Utils.js';
 import game from './game.js';
 import consts from './consts.js';
 
-var gbId = document.getElementById.bind(document);
+var gbId = document.getElementById.bind(document),
+    selectedCharacterIndex = utils.getRandomInt(window.characterNames.length - 1);
 
 document.addEventListener('DOMContentLoaded', function() {
     var data = game.getGameSavedData();
+    gbId('CharacterAvatar').addEventListener('click', function() {
+        selectedCharacterIndex = selectedCharacterIndex + 1 > window.characterNames.length - 1 ? 0 : selectedCharacterIndex + 1;
+        updateSelectedCharacterAvatar();
+    });
     data && utils.createRequest('/player/' + data.playerId, 'GET', null, function(playerData) {
         setDomElementVisibility(gbId('ContinueGameItemsContainer'), !!playerData);
+        updateSelectedCharacterAvatar();
         if(playerData) {
             var text = utils.stringFormat('Continue game as <span class="red-text">{0}</span>', playerData.login);
             gbId('ContinueGameButton').innerHTML = text;
@@ -34,16 +40,26 @@ function setDomElementVisibility(element, isVisible) {
 function addOnLoginAction(fn) {
     var loginInput = gbId('LoginInput'),
         loginFn = function() {
-            fn(loginInput.value, null);
+            fn({
+                login: loginInput.value,
+                characterName: getSelectedCharacterName()
+            });
         };
     loginInput.onkeydown = function(e) {
         e.keyCode === 13 && loginFn();
     };
     gbId('StartGameButton').onclick = loginFn;
     gbId('ContinueGameButton').onclick = function() {
-        fn('', game.getGameSavedData().playerId);
+        fn({ playerId: game.getGameSavedData().playerId });
     };
+};
 
+function getSelectedCharacterName() {
+    return window.characterNames[selectedCharacterIndex];
+};
+
+function updateSelectedCharacterAvatar() {
+    gbId('CharacterAvatar').src = utils.stringFormat('{0}{1}.gif',consts.CHARACTERS_GIFS_PATH, getSelectedCharacterName());
 };
 
 function updatePlayerInterface(playerData, selectedWeaponData) {

@@ -28,8 +28,8 @@ function create() {
     game.renderer.renderSession.roundPixels = true;
     controls.init(getControlsHandlers());
     socket.init(getSocketHandlers(), function() {
-        userInterface.addOnLoginAction(function(login, id) {
-            socket.emit('joinGame', { login: login, id: id });
+        userInterface.addOnLoginAction(function(data) {
+            socket.emit('joinGame', data);
         });
     });
     window.setInterval(checkCollision, 50);
@@ -247,12 +247,12 @@ function updatePlayerPosition() {
 };
 
 function updateOtherPlayersPosition(playersData) {
-    var ids = {};
+    var onlinePlayerIds = {};
     if(gameData && playersData) {
         utils.forEachEntryInObject(playersData, function(playerId, playerData) {
             if(playerId !== gameData.player.data.id) {
                 var pos = playerData.positionInfo;
-                ids[playerId] = true;
+                onlinePlayerIds[playerId] = true;
                 if(!gameData.players[playerId]) {
                     gameData.players[playerId] = spritesFactory.createPlayer(playerData);
                     gameData.playersGroup.add(gameData.players[playerId]);
@@ -265,7 +265,7 @@ function updateOtherPlayersPosition(playersData) {
         });
     }
     utils.forEachEntryInObject(gameData.players, function(playerId, player) {
-        if(!ids[playerId] && gameData.player.data.id !== playerId) {
+        if(!onlinePlayerIds[playerId] && gameData.player.data.id !== playerId) {
             player.kill();
             delete gameData.players[playerId];
         }
