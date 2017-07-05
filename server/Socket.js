@@ -70,38 +70,45 @@ function findRoomForPlayer(playerId, exceptRoomId, callback) {
 function onSocketPlayerInfo(data) {
     var player = getPlayerBySocketData(data);
     if(player) {
-        !player.idDead && (player.positionInfo = data.positionInfo);
+        player.positionInfo = data.positionInfo;
         player.lastUpdateTime = utils.getNowTime();
     } else {
-        this.emit('forceReload');
+        this.emit('death');
     }
 };
 
 function onSocketHit(data) {
     var room = getRoomBySocketData(data),
-        owner = room ? room.players[data.ownerId] : null,
+        owner = room ? room.players[data.playerId] : null,
         target = room ? room.players[data.targetId] : null,
-        bullet = room.bullets[data.id];
+        bullet = room.bullets[data.bulletId],
+        targetSocket = io.sockets.connected[target.socketId];
     if(owner && target && bullet) {
         processPlayerDamage(target, bullet.damage);
         delete room.bullets[data.id];
-        if(target.hp <= 0) {
-            var position = getPlayerSpawnPosition(room);
-            target.positionInfo.x = position.x;
-            target.positionInfo.y = position.y;
-            target.endurance.hp = 100;
-            target.endurance.armor = 0;
-            target.idDead = true;
+        if(target.endurance.hp <= 0) {
             owner.score += 1;
-            io.sockets.in(data.roomId).emit('respawn', {
-                playerId: target.id,
-                position: position
-            });
+            dataHelper.setPlayerData(owner.id, { score: owner.score });
+            targetSocket.emit('death');
+            removePlayerFromRoom(room, targetSocket, target);
             io.sockets.connected[owner.socketId].emit('score', owner.score);
         } else {
-            io.sockets.connected[target.socketId].emit('enduranceInfo', target.endurance);
+            targetSocket.emit('enduranceInfo', target.endurance);
         }
     }
+};
+
+function respawnPlayer(player) {
+    var spawnPosition = getPlayerSpawnPosition(room);
+    player.positionInfo.x = spawnPosition.x;
+    player.positionInfo.y = spawnPosition.y;
+    player.endurance = { hp: 100, armor: 0 };
+    player.isDead = true;
+    player.lastRespawnTime = utils.getNowTime();
+    io.sockets.connected[player.socketId].emit('respawn', {
+        endurance: player.endurance,
+        position: position
+    });
 };
 
 function onSocketShot(bulletData) {
@@ -112,10 +119,10 @@ function onSocketShot(bulletData) {
         if(weapon) {
             delete bulletData.roomId;
             bulletData.time = utils.getNowTime();
+            bulletData.damage = weapons.getWeaponByName(weapon.name).damage;
             room.bullets[bulletData.id] = bulletData;
             utils.forEachEntryInObject(room.players, (id, p) =>
-                id != bulletData.playerId && io.sockets.connected[p.socketId].emit('otherPlayerShot',
-                    { playerId: bulletData.playerId, weaponName: bulletData.weaponName, damage: weapon.damage })
+                id != bulletData.playerId && io.sockets.connected[p.socketId].emit('otherPlayerShot', bulletData)
             );
             weapon.ammo -= 1;
             if(weapon.ammo <= 0) {
@@ -167,9 +174,7 @@ function onSocketPortal(data) {
         player = getPlayerBySocketData(data);
     if(currentRoom && player) {
         findRoomForPlayer(player.id, currentRoom.id, function(newRoom) {
-            socket.leave(currentRoom.id);
-            delete currentRoom.players[player.id];
-
+            removePlayerFromRoom(currentRoom, socket, player);
             addNewPlayerToRoom(newRoom, socket, player);
             utils.extendObject(player.positionInfo, getPlayerSpawnPosition(newRoom));
             socket.emit('joinRoomData', getJoinRoomData(newRoom, player));
@@ -243,6 +248,11 @@ function createNewRoom(callback) {
         room.map = mapData;
         callback(room);
     });
+};
+
+function removePlayerFromRoom(room, socket, player) {
+    socket.leave(room.id);
+    delete room.players[player.id];
 };
 
 function addNewPlayerToRoom(room, socket, player) {

@@ -33,6 +33,10 @@ function setGameInterfaceVisibility(isVisible) {
     setDomElementVisibility(gbId('GameInterfaceContainer'), isVisible);
 };
 
+function setDeathScreenVisibility(isVisible) {
+    setDomElementVisibility(gbId('DeathScreen'), isVisible);
+};
+
 function setDomElementVisibility(element, isVisible) {
     element.classList[isVisible ? 'remove' : 'add']('hidden');
 };
@@ -52,6 +56,10 @@ function addOnLoginAction(fn) {
     gbId('ContinueGameButton').onclick = function() {
         fn({ playerId: game.getGameSavedData().playerId });
     };
+};
+
+function addOnDeathScreenClickAction(fn) {
+    gbId('DeathScreen').addEventListener('click', fn);
 };
 
 function getSelectedCharacterName() {
@@ -108,11 +116,13 @@ function getNumberHtml(number) {
 
 export default {
     addOnLoginAction: addOnLoginAction,
+    addOnDeathScreenClickAction: addOnDeathScreenClickAction,
     updatePlayerWeaponPanel: updatePlayerWeaponPanel,
     updatePlayerEndurancePanels: updatePlayerEndurancePanels,
     updatePlayerInterface: updatePlayerInterface,
     setLoginPanelVisibility: setLoginPanelVisibility,
     setGameInterfaceVisibility: setGameInterfaceVisibility,
+    setDeathScreenVisibility: setDeathScreenVisibility,
     setPortalIconVisibility: setPortalIconVisibility
 };
 

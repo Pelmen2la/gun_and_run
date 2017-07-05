@@ -167,8 +167,9 @@ function createBullet(data, timeDelta = 0) {
         y = pos.y + (animProps.vY * speed * timeDelta),
         bullet = getSprite(weapon.name + 'bullet', x, y);
     bullet.data = {
-        ownerId: data.playerId,
-        damage: data.damage
+        playerId: data.playerId,
+        damage: data.damage,
+        id: data.id
     };
     bullet.body.velocity.x = animProps.vX * speed;
     bullet.body.velocity.y = animProps.vY * speed;

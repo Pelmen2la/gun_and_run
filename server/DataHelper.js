@@ -19,6 +19,13 @@ function getPlayer(id, callback) {
     });
 };
 
+function setPlayerData(playerId, data) {
+    getPlayer(playerId, (p) => {
+        p && utils.forEachEntryInObject(data, (k, v) => p.set(k, v));
+        p && p.save();
+    })
+};
+
 
 function getPlayerNewGameData(id, position, socketId, callback) {
     getPlayer(id, function(playerData) {
@@ -176,5 +183,6 @@ module.exports = {
     getNewMap: getNewMap,
     getNewPlayer: getNewPlayer,
     getPlayer: getPlayer,
+    setPlayerData: setPlayerData,
     getPlayerNewGameData: getPlayerNewGameData
 };

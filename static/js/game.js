@@ -31,6 +31,9 @@ function create() {
         userInterface.addOnLoginAction(function(data) {
             socket.emit('joinGame', data);
         });
+        userInterface.addOnDeathScreenClickAction(function() {
+            socket.emit('joinGame', { playerId: gameData.player.data.id });
+        });
     });
     window.setInterval(checkCollision, 50);
 };
@@ -60,9 +63,10 @@ function checkCollision() {
             socket.emit('hit', {
                 roomId: gameData.roomId,
                 targetId: player.data.id,
-                ownerId: bullet.data.playerId
+                playerId: bullet.data.playerId,
+                bulletId: bullet.data.id
             });
-            bullet.data.ownerId !== player.data.id && window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
+            bullet.data.playerId !== player.data.id && window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
         });
         game.physics.arcade.collide(map.getEnduranceItemsGroup(), gameData.player, function(player, item) {
             processPickupItem(player.data.id, item.data.id, 'Endurance');
@@ -127,9 +131,9 @@ function onPortalButtonDown() {
 };
 
 function shot(weaponName) {
-    var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, id: utils.getUid() };
+    var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, id: utils.getUid(),
+        positionInfo: getPlayerPositionInfo(gameData.player, 'look', false) };
     socket.emit('shot', data);
-    data.positionInfo = getPlayerPositionInfo(gameData.player, 'look', false);
     gameData.bulletsGroup.add(spritesFactory.createBullet(data));
 };
 
@@ -143,11 +147,14 @@ function getSocketHandlers() {
             initGameData(data);
             userInterface.setGameInterfaceVisibility(true);
             userInterface.setLoginPanelVisibility(false);
+            userInterface.setDeathScreenVisibility(false);
             gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
             updatePlayerInterface();
         },
         onJoinRoomData: function(data) {
             initGameData(data);
+            userInterface.setGameInterfaceVisibility(true);
+            userInterface.setDeathScreenVisibility(false);
             gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
         },
         onPlayersData: function(data) {
@@ -156,14 +163,10 @@ function getSocketHandlers() {
         onOtherPlayerShot: function(data) {
             addShot(data);
         },
-        onRespawn: function(data) {
-            var player = gameData.players[data.playerId];
-            if(player) {
-                player.x = data.position.x;
-                player.y = data.position.y;
-                player.id === gameData.player.id && socket.emit('respawnComplete',
-                    { roomId: gameData.roomId, playerId: gameData.player.id });
-            }
+        onDeath: function() {
+            window.clearInterval(gameData.sendPlayerInfoIntevalId);
+            userInterface.setGameInterfaceVisibility(false);
+            userInterface.setDeathScreenVisibility(true);
         },
         onPlayerLeave: function(playerId) {
             removePlayer(playerId);
@@ -173,8 +176,7 @@ function getSocketHandlers() {
             updatePlayerInterface();
         },
         onEnduranceInfo: function(endurance) {
-            gameData.player.data.endurance = endurance;
-            updatePlayerInterface();
+            setPlayerEndurance(endurance);
         },
         onWeaponsInfo: function(weapons) {
             gameData.player.data.weapons = weapons;
@@ -195,6 +197,11 @@ function getSocketHandlers() {
             location.reload();
         }
     }
+};
+
+function setPlayerEndurance(endurance) {
+    gameData.player.data.endurance = endurance;
+    updatePlayerInterface();
 };
 
 function getGameSavedData(data) {
@@ -287,7 +294,6 @@ function updatePlayerInterface() {
 
 function addShot(data) {
     var player = gameData.players[data.playerId];
-    data.positionInfo = getPlayerPositionInfo(player, 'look', false);
     player && gameData.bulletsGroup.add(spritesFactory.createBullet(data));
 };
 
