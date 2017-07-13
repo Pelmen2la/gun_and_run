@@ -32,7 +32,10 @@ function create() {
             socket.emit('joinGame', data);
         });
         userInterface.addOnDeathScreenClickAction(function() {
-            socket.emit('joinGame', { playerId: gameData.player.data.id });
+            window.clearInterval(gameData.sendPlayerInfoIntevalId);
+            window.setTimeout(function() {
+                socket.emit('joinGame', {playerId: gameData.player.data.id});
+            }, 100);
         });
     });
     window.setInterval(checkCollision, 50);
@@ -265,7 +268,7 @@ function updateOtherPlayersPosition(playersData) {
                     gameData.playersGroup.add(gameData.players[playerId]);
                 }
                 var player = gameData.players[playerId];
-                spritesFactory.updatePlayerSprite(player, pos.moveDirection);
+                spritesFactory.updatePlayerSprite(player, pos.direction);
                 player.x = pos.x;
                 player.y = pos.y;
             }
