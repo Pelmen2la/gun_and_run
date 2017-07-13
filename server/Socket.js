@@ -88,10 +88,13 @@ function onSocketHit(data) {
         delete room.bullets[data.id];
         if(target.endurance.hp <= 0) {
             owner.score += 1;
-            dataHelper.setPlayerData(owner.id, { score: owner.score });
             targetSocket.emit('death');
             removePlayerFromRoom(room, targetSocket, target);
-            io.sockets.connected[owner.socketId].emit('score', owner.score);
+            dataHelper.setPlayerData(owner.id, { score: owner.score }, () => {
+                dataHelper.getPlayerRank(owner.id, (rank) => {
+                    io.sockets.connected[owner.socketId].emit('score', { score: owner.score, rank: rank });
+                });
+            });
         } else {
             targetSocket.emit('enduranceInfo', target.endurance);
         }

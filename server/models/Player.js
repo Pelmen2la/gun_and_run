@@ -4,6 +4,7 @@ var mongoose = require('mongoose'),
         lastLoginTime: Number,
         login: String,
         score: Number,
+        rank: Number,
         characterName: String
     });
 

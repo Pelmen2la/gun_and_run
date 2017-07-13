@@ -119,7 +119,7 @@ function onShotButtonPress() {
             ensurePlayerSelectedWeapon();
         }
         shot(playerWeapon.name);
-        updatePlayerInterface();
+        userInterface.updatePlayerWeaponPanel(getPlayerSelectedWeapon());
     }
 };
 
@@ -171,9 +171,9 @@ function getSocketHandlers() {
         onPlayerLeave: function(playerId) {
             removePlayer(playerId);
         },
-        onScore: function(score) {
-            gameData.player.data.score = score;
-            updatePlayerInterface();
+        onScore: function(data) {
+            gameData.player.data.score = data.score;
+            userInterface.updatePlayerScoreCounter(data.score, data.rank);
         },
         onEnduranceInfo: function(endurance) {
             setPlayerEndurance(endurance);
@@ -201,7 +201,7 @@ function getSocketHandlers() {
 
 function setPlayerEndurance(endurance) {
     gameData.player.data.endurance = endurance;
-    updatePlayerInterface();
+    userInterface.updatePlayerEndurancePanels(endurance);
 };
 
 function getGameSavedData(data) {

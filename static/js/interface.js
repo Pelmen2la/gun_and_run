@@ -3,7 +3,10 @@ import game from './game.js';
 import consts from './consts.js';
 
 var gbId = document.getElementById.bind(document),
+    deathScreenClickTime = 0,
     selectedCharacterIndex = utils.getRandomInt(window.characterNames.length - 1);
+
+const DEATH_SCREEN_CLICK_TIMEOUT = 1000;
 
 document.addEventListener('DOMContentLoaded', function() {
     var data = game.getGameSavedData();
@@ -59,7 +62,12 @@ function addOnLoginAction(fn) {
 };
 
 function addOnDeathScreenClickAction(fn) {
-    gbId('DeathScreen').addEventListener('click', fn);
+    gbId('DeathScreen').addEventListener('click', function() {
+        if(utils.getNowTime() - deathScreenClickTime > DEATH_SCREEN_CLICK_TIMEOUT) {
+            fn();
+            deathScreenClickTime = utils.getNowTime();
+        }
+    });
 };
 
 function getSelectedCharacterName() {
@@ -71,13 +79,19 @@ function updateSelectedCharacterAvatar() {
 };
 
 function updatePlayerInterface(playerData, selectedWeaponData) {
-    updatePlayerEndurancePanels(playerData);
+    updatePlayerEndurancePanels(playerData.endurance);
     updatePlayerWeaponPanel(selectedWeaponData);
+    updatePlayerScoreCounter(playerData.score, playerData.rank);
 };
 
-function updatePlayerEndurancePanels(playerData) {
-    updatePlayerHpPanel(playerData.endurance.hp);
-    updatePlayerArmorPanel(playerData.endurance.armor);
+function updatePlayerScoreCounter(score, rank) {
+    gbId('ScoreCounter').innerHTML = getNumberHtml(score, true);
+    gbId('RankNumber').innerHTML = getNumberHtml(rank, true);
+};
+
+function updatePlayerEndurancePanels(endurance) {
+    updatePlayerHpPanel(endurance.hp);
+    updatePlayerArmorPanel(endurance.armor);
 };
 
 function updatePlayerHpPanel(hp) {
@@ -106,9 +120,9 @@ function updatePlayerArmorPanel(armorCount) {
     panel.querySelector('.numbers').innerHTML = getNumberHtml(armorCount);
 };
 
-function getNumberHtml(number) {
+function getNumberHtml(number, isBig) {
     function getNumeralHtml(numeral) {
-        return utils.stringFormat('<img src="{0}{1}.png" />', consts.NUMBER_ICONS_PATH, numeral);
+        return utils.stringFormat('<img src="{0}{1}{2}.png" />', consts.NUMBER_ICONS_PATH, isBig ? 'big/' : '', numeral);
     };
     number = number || 0;
     return number.toString().split('').map(getNumeralHtml).join('');
@@ -119,6 +133,7 @@ export default {
     addOnDeathScreenClickAction: addOnDeathScreenClickAction,
     updatePlayerWeaponPanel: updatePlayerWeaponPanel,
     updatePlayerEndurancePanels: updatePlayerEndurancePanels,
+    updatePlayerScoreCounter: updatePlayerScoreCounter,
     updatePlayerInterface: updatePlayerInterface,
     setLoginPanelVisibility: setLoginPanelVisibility,
     setGameInterfaceVisibility: setGameInterfaceVisibility,

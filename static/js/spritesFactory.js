@@ -93,7 +93,8 @@ function createPlayer(data) {
         id: data.id,
         weapons: data.weapons,
         selectedWeaponIndex: 0,
-        score: 0,
+        score: data.score,
+        rank: data.rank,
         endurance: data.endurance,
         lookDirection: 'up'
     };
