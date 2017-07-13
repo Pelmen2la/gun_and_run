@@ -63,7 +63,7 @@ function checkCollision() {
             window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
         });
         game.physics.arcade.collide(gameData.bulletsGroup, gameData.playersGroup, function(bullet, player) {
-            socket.emit('hit', {
+            bullet.data.playerId !== player.data.id && socket.emit('hit', {
                 roomId: gameData.roomId,
                 targetId: player.data.id,
                 playerId: bullet.data.playerId,

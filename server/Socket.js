@@ -83,7 +83,7 @@ function onSocketHit(data) {
         target = room ? room.players[data.targetId] : null,
         bullet = room.bullets[data.bulletId],
         targetSocket = io.sockets.connected[target.socketId];
-    if(owner && target && bullet) {
+    if(owner && target && bullet && target.id !== owner.id) {
         processPlayerDamage(target, bullet.damage);
         delete room.bullets[data.id];
         if(target.endurance.hp <= 0) {
