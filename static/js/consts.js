@@ -1,4 +1,5 @@
 export default {
+    LANDSCAPE_TILE_SIZE: 32,
     PLAYER_VELOCITY: 200,
     LANDSCAPE_TILES_FOLDER_PATH: '/images/landscape/',
     ICONS_PATH: '/images/icons/',

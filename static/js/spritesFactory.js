@@ -3,6 +3,8 @@ import consts from './consts.js';
 import utils from './../../server/Utils.js'
 import weapons from './../../server/Weapons.js'
 
+const flamethrowerFlameSizes = [[8, 11], [10, 13], [16, 16], [32, 32]];
+
 function loadResources() {
     var load = game.instance.load.spritesheet.bind(game.instance.load);
     load('hp', consts.SPRITES_PATH +'items/hp.png', 32, 32);
@@ -25,9 +27,20 @@ function loadResources() {
     }
     weapons.getWeapons().forEach(function(w) {
         var size = w.bulletSize;
-        load(w.name + 'bullet', utils.stringFormat('{0}/bullets/{1}.png', consts.TILES_PATH, w.name), size[0], size[1]);
+        w.name !== 'flamethrower' && load(w.name + 'bullet', utils.stringFormat('{0}/bullets/{1}.png', consts.TILES_PATH, w.name), size[0], size[1]);
         w.name !== 'pistol' && load(w.name, utils.stringFormat('{0}{1}.png', consts.WEAPONS_SPRITES_FOLDER_PATH, w.name), 32, 32);
+
+        if(w.name === 'flamethrower') {
+            for(var i = 0, size; size = flamethrowerFlameSizes[i]; i++) {
+                var flameName = getFlamethrowerFlameTileName(i);
+                load(flameName, utils.stringFormat('{0}/bullets/{1}.png', consts.TILES_PATH, flameName), size[0], size[1]);
+            }
+        }
     });
+};
+
+function getFlamethrowerFlameTileName(index) {
+    return 'flamethrowerflame' + index;
 };
 
 function getLandscapeRandomTileName(landscapeType, tileType) {
@@ -178,6 +191,25 @@ function createBullet(data, timeDelta = 0) {
     return bullet;
 };
 
+function createFlamethrowerFlame(data, flameIndex) {
+    var pos = data.positionInfo,
+        animProps = getSpriteAnimProps(pos.direction),
+        baseXOffset = consts.LANDSCAPE_TILE_SIZE * 1.5 * animProps.vX,
+        baseYOffset = consts.LANDSCAPE_TILE_SIZE * 1.5 * animProps.vY,
+        flameSizes = flamethrowerFlameSizes.slice(0, flameIndex + 1),
+        flameXLength = flameSizes.reduce((pV, cV) => pV + cV[0], 0) + flameSizes.length * 3,
+        flameYLength = flameSizes.reduce((pV, cV) => pV + cV[1], 0) + flameSizes.length * 3,
+        x = pos.x + baseXOffset + (flameXLength - flamethrowerFlameSizes[flameIndex][0] / 2) * animProps.vX,
+        y = pos.y + baseYOffset + (flameYLength - flamethrowerFlameSizes[flameIndex][1] / 2) * animProps.vY,
+        flame = getSprite(getFlamethrowerFlameTileName(flameIndex), x, y);
+    flame.data = {
+        playerId: data.playerId,
+        damage: data.damage,
+        id: data.id
+    };
+    return flame;
+};
+
 
 export default {
     loadResources: loadResources,
@@ -189,6 +221,7 @@ export default {
     updatePlayerSprite: updatePlayerSprite,
     updatePlayerDirections: updatePlayerDirections,
     createBullet: createBullet,
+    createFlamethrowerFlame: createFlamethrowerFlame,
     createEnduranceItem: createEnduranceItem,
     createWeaponItem: createWeaponItem,
     createAnimatedObject: createAnimatedObject

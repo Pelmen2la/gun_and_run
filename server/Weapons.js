@@ -21,10 +21,17 @@ const pistol = {
         bulletSpeed: 900,
         reloadTime: 3000,
         bulletSize: [10, 8]
+    },
+    flamethrower = {
+        name: 'flamethrower',
+        ammo: 10,
+        damage: 30,
+        bulletSpeed: 700,
+        reloadTime: 350
     };
 
 function getWeapons() {
-    return [pistol, machinegun, rocketLauncher];
+    return [pistol, machinegun, rocketLauncher, flamethrower];
 };
 
 function getNotStandardWeapons() {

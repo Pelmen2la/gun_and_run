@@ -83,9 +83,8 @@ function onSocketHit(data) {
         target = room ? room.players[data.targetId] : null,
         bullet = room.bullets[data.bulletId],
         targetSocket = io.sockets.connected[target.socketId];
-    if(owner && target && bullet && target.id !== owner.id) {
+    if(owner && target && bullet && target.id !== owner.id && bullet.hittedPlayerIds.indexOf(target.id) === -1) {
         processPlayerDamage(target, bullet.damage);
-        delete room.bullets[data.id];
         if(target.endurance.hp <= 0) {
             owner.score += 1;
             targetSocket.emit('death');
@@ -123,6 +122,7 @@ function onSocketShot(bulletData) {
             delete bulletData.roomId;
             bulletData.time = utils.getNowTime();
             bulletData.damage = weapons.getWeaponByName(weapon.name).damage;
+            bulletData.hittedPlayerIds = [];
             room.bullets[bulletData.id] = bulletData;
             utils.forEachEntryInObject(room.players, (id, p) =>
                 id != bulletData.playerId && io.sockets.connected[p.socketId].emit('otherPlayerShot', bulletData)

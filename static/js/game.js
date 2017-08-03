@@ -50,26 +50,33 @@ function update() {
 
 function checkCollision() {
     var processPickupItem = function(playerId, itemId, type) {
-        map['hide' + type + 'Item'](itemId, utils.getNowTime());
-        socket.emit('pickup' + type + 'Item', {
-            roomId: gameData.roomId,
-            playerId: playerId,
-            itemId: itemId
-        });
-    };
-
-    if(gameData && gameData.player) {
-        game.physics.arcade.collide(gameData.bulletsGroup, map.getWallGroup(), function(bullet) {
-            window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
-        });
-        game.physics.arcade.collide(gameData.bulletsGroup, gameData.playersGroup, function(bullet, player) {
+            map['hide' + type + 'Item'](itemId, utils.getNowTime());
+            socket.emit('pickup' + type + 'Item', {
+                roomId: gameData.roomId,
+                playerId: playerId,
+                itemId: itemId
+            });
+        },
+        tryEmitHitOnCollide = function(bullet, player) {
             bullet.data.playerId !== player.data.id && socket.emit('hit', {
                 roomId: gameData.roomId,
                 targetId: player.data.id,
                 playerId: bullet.data.playerId,
                 bulletId: bullet.data.id
             });
+        };
+
+
+    if(gameData && gameData.player) {
+        game.physics.arcade.collide(gameData.bulletsGroup, map.getWallGroup(), function(bullet) {
+            window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
+        });
+        game.physics.arcade.collide(gameData.bulletsGroup, gameData.playersGroup, function(bullet, player) {
+            tryEmitHitOnCollide(bullet, player);
             bullet.data.playerId !== player.data.id && window.setTimeout(() => gameData.bulletsGroup.remove(bullet, true), 0);
+        });
+        game.physics.arcade.collide(gameData.flameGroup, gameData.playersGroup, function(bullet, player) {
+            tryEmitHitOnCollide(bullet, player);
         });
         game.physics.arcade.collide(map.getEnduranceItemsGroup(), gameData.player, function(player, item) {
             processPickupItem(player.data.id, item.data.id, 'Endurance');
@@ -97,6 +104,7 @@ function initGameData(data) {
         players: {},
         playersGroup: game.add.group(),
         bulletsGroup: game.add.group(),
+        flameGroup: game.add.group(),
         roomId: data.roomId
     };
     game.camera.follow(gameData.player);
@@ -137,7 +145,25 @@ function shot(weaponName) {
     var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, id: utils.getUid(),
         positionInfo: getPlayerPositionInfo(gameData.player, 'look', false) };
     socket.emit('shot', data);
+    weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullet(data);
+};
+
+function addBullet(data) {
     gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+};
+
+function addFlamethrowerFlame(data) {
+    socket.emit('shot', data);
+    var counter = 0,
+        flameSpritesIntervalId = window.setInterval(function() {
+            var flame = spritesFactory.createFlamethrowerFlame(data, counter);
+            gameData.flameGroup.add(flame);
+            counter++;
+            counter == 4 && window.clearInterval(flameSpritesIntervalId);
+            window.setTimeout(function() {
+                gameData.flameGroup.remove(flame);
+            }, 90);
+        }, 75);
 };
 
 
@@ -297,7 +323,7 @@ function updatePlayerInterface() {
 
 function addShot(data) {
     var player = gameData.players[data.playerId];
-    player && gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+    player && (data.weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullet(data));
 };
 
 export default {
