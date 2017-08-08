@@ -5,6 +5,7 @@ export default {
     ICONS_PATH: '/images/icons/',
     SPRITES_PATH: '/images/sprites/',
     TILES_PATH: '/images/tiles/',
+    AUDIO_PATH: '/audio/',
     CHARACTERS_GIFS_PATH: '/images/sprites/characters/gif/',
     NUMBER_ICONS_PATH: '/images/icons/numbers/',
     WEAPONS_ICONS_PATH: '/images/icons/weapons/',

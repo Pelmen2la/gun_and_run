@@ -4,12 +4,14 @@ require('phaser');
 
 import socket from './socket.js'
 import spritesFactory from './spritesFactory.js'
+import audio from './audio.js'
 import map from './map.js'
 import consts from './consts.js';
 import controls from './controls.js';
 import userInterface from './interface.js';
 import utils from './../../server/Utils.js'
 import weapons from './../../server/Weapons.js'
+
 
 var gameData = {},
     game = new Phaser.Game(window.innerWidth, window.innerHeight,
@@ -21,6 +23,7 @@ var gameData = {},
 
 function preload() {
     spritesFactory.loadResources();
+    audio.loadResources();
 };
 
 function create() {
@@ -163,7 +166,9 @@ function addBullets(data) {
 
 function addBulletCore(data, deviationAngle) {
     data.deviationAngle = deviationAngle || 0;
+    audio.playWeaponShot(data.weaponName);
     gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+
 };
 
 function addFlamethrowerFlame(data) {
@@ -171,6 +176,7 @@ function addFlamethrowerFlame(data) {
     var counter = 0,
         flameSpritesIntervalId = window.setInterval(function() {
             var flame = spritesFactory.createFlamethrowerFlame(data, counter);
+            audio.playWeaponShot(data.weaponName);
             gameData.flameGroup.add(flame);
             counter++;
             counter == 4 && window.clearInterval(flameSpritesIntervalId);
