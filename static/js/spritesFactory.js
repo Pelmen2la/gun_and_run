@@ -179,14 +179,21 @@ function createBullet(data, timeDelta = 0) {
         animProps = getSpriteAnimProps(pos.direction),
         x = pos.x + (animProps.vX * speed * timeDelta),
         y = pos.y + (animProps.vY * speed * timeDelta),
+        vX = animProps.vX * speed,
+        vY = animProps.vY * speed,
         bullet = getSprite(weapon.name + 'bullet', x, y);
+    if(data.deviationAngle) {
+        var deviationAngle = data.deviationAngle / 180 * Math.PI;
+        vX = vX * Math.cos(deviationAngle) - vY * Math.sin(deviationAngle);
+        vY = vY * Math.cos(deviationAngle) + vX * Math.sin(deviationAngle);
+    }
     bullet.data = {
         playerId: data.playerId,
         damage: data.damage,
         id: data.id
     };
-    bullet.body.velocity.x = animProps.vX * speed;
-    bullet.body.velocity.y = animProps.vY * speed;
+    bullet.body.velocity.x = vX;
+    bullet.body.velocity.y = vY;
     bullet.angle = - animProps.angle;
     return bullet;
 };

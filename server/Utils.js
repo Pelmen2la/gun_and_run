@@ -48,6 +48,12 @@ function extendObject(obj, props) {
     return obj;
 };
 
+function getObjectClone(obj) {
+    var clone = {};
+    forEachEntryInObject(obj, (key, value) => clone[key] = value);
+    return clone;
+};
+
 function createRequest(url, method, data, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open(method, url, true);
@@ -69,5 +75,6 @@ module.exports = {
     forEachEntryInObject: forEachEntryInObject,
     stringFormat: stringFormat,
     extendObject: extendObject,
+    getObjectClone: getObjectClone,
     createRequest: createRequest
 };

@@ -83,7 +83,8 @@ function onSocketHit(data) {
         target = room ? room.players[data.targetId] : null,
         bullet = room.bullets[data.bulletId],
         targetSocket = io.sockets.connected[target.socketId];
-    if(owner && target && bullet && target.id !== owner.id && bullet.hittedPlayerIds.indexOf(target.id) === -1) {
+    if(owner && target && bullet && target.id !== owner.id && (bullet.hitsCounter[target.id] || 0) < bullet.maxHitsCount) {
+        bullet.hitsCounter[target.id] = (bullet.hitsCounter[target.id] || 0) + 1;
         processPlayerDamage(target, bullet.damage);
         if(target.endurance.hp <= 0) {
             owner.score += 1;
@@ -119,10 +120,12 @@ function onSocketShot(bulletData) {
     if(player) {
         var weapon = player.weapons.find(function(w) { return w.name === bulletData.weaponName });
         if(weapon) {
+            var weaponProps = weapons.getWeaponByName(weapon.name);
             delete bulletData.roomId;
             bulletData.time = utils.getNowTime();
-            bulletData.damage = weapons.getWeaponByName(weapon.name).damage;
-            bulletData.hittedPlayerIds = [];
+            bulletData.damage = weaponProps.damage;
+            bulletData.maxHitsCount = weaponProps.bulletsCount || 1;
+            bulletData.hitsCounter = {};
             room.bullets[bulletData.id] = bulletData;
             utils.forEachEntryInObject(room.players, (id, p) =>
                 id != bulletData.playerId && io.sockets.connected[p.socketId].emit('otherPlayerShot', bulletData)

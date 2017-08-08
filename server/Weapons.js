@@ -1,3 +1,5 @@
+var utils = require('./Utils');
+
 const pistol = {
         name: 'pistol',
         ammo: Infinity,
@@ -5,6 +7,15 @@ const pistol = {
         bulletSpeed: 500,
         reloadTime: 500,
         bulletSize: [6, 6]
+    },
+    doublepistol = {
+        name: 'doublepistol',
+        ammo: 10,
+        damage: 30,
+        bulletSpeed: 600,
+        reloadTime: 450,
+        bulletSize: [6, 6],
+        bulletsCount: 2
     },
     machinegun = {
         name: 'machinegun',
@@ -31,7 +42,7 @@ const pistol = {
     };
 
 function getWeapons() {
-    return [pistol, machinegun, rocketLauncher, flamethrower];
+    return [pistol, doublepistol, machinegun, rocketLauncher, flamethrower];
 };
 
 function getNotStandardWeapons() {
@@ -43,7 +54,7 @@ function getWeaponByName(name, partialData) {
     return partialData ? {
         name: weapon.name,
         ammo: weapon.ammo
-    } : weapon;
+    } : utils.getObjectClone(weapon);
 };
 
 module.exports = {

@@ -149,7 +149,14 @@ function shot(weaponName) {
 };
 
 function addBullet(data) {
-    gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+    if(data.weaponName === 'doublepistol') {
+        data.deviationAngle = 10;
+        gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+        data.deviationAngle = -10;
+        gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+    } else {
+        gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+    }
 };
 
 function addFlamethrowerFlame(data) {
