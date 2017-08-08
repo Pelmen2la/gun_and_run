@@ -195,6 +195,7 @@ function createBullet(data, timeDelta = 0) {
     bullet.body.velocity.x = vX;
     bullet.body.velocity.y = vY;
     bullet.angle = - animProps.angle;
+    weapon.bulletLifeTime && window.setTimeout(bullet.kill.bind(bullet), weapon.bulletLifeTime);
     return bullet;
 };
 

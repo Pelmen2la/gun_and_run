@@ -145,18 +145,25 @@ function shot(weaponName) {
     var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, id: utils.getUid(),
         positionInfo: getPlayerPositionInfo(gameData.player, 'look', false) };
     socket.emit('shot', data);
-    weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullet(data);
+    weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullets(data);
 };
 
-function addBullet(data) {
+function addBullets(data) {
     if(data.weaponName === 'doublepistol') {
-        data.deviationAngle = 10;
-        gameData.bulletsGroup.add(spritesFactory.createBullet(data));
-        data.deviationAngle = -10;
-        gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+        addBulletCore(data, 10);
+        addBulletCore(data, -10);
     } else {
-        gameData.bulletsGroup.add(spritesFactory.createBullet(data));
+        if(data.weaponName === 'shotgun') {
+            addBulletCore(data, -5);
+            addBulletCore(data, 5);
+        }
+        addBulletCore(data);
     }
+};
+
+function addBulletCore(data, deviationAngle) {
+    data.deviationAngle = deviationAngle || 0;
+    gameData.bulletsGroup.add(spritesFactory.createBullet(data));
 };
 
 function addFlamethrowerFlame(data) {
@@ -330,7 +337,7 @@ function updatePlayerInterface() {
 
 function addShot(data) {
     var player = gameData.players[data.playerId];
-    player && (data.weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullet(data));
+    player && (data.weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullets(data));
 };
 
 export default {

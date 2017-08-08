@@ -25,6 +25,16 @@ const pistol = {
         reloadTime: 200,
         bulletSize: [5, 5]
     },
+    shotgun = {
+        name: 'shotgun',
+        ammo: 7,
+        damage: 20,
+        bulletSpeed: 900,
+        reloadTime: 700,
+        bulletSize: [4, 4],
+        bulletsCount: 3,
+        bulletLifeTime: 300
+    },
     rocketLauncher = {
         name: 'rocketlauncher',
         ammo: 3,
@@ -42,7 +52,7 @@ const pistol = {
     };
 
 function getWeapons() {
-    return [pistol, doublepistol, machinegun, rocketLauncher, flamethrower];
+    return [pistol, doublepistol, machinegun, shotgun, rocketLauncher, flamethrower];
 };
 
 function getNotStandardWeapons() {
