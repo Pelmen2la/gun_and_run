@@ -79,13 +79,11 @@ h1 {
     position: relative;
     display: inline-block;
     cursor: pointer;
-    img:not(.pointer) {
+    img:not(.arrow) {
         height: 64px;
     }
-    img.pointer {
-        top: 15px;
-        right: -60px;
-        position: absolute;
+    img.arrow {
+        padding: 20px;
     }
 }
 

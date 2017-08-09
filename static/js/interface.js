@@ -9,10 +9,22 @@ var gbId = document.getElementById.bind(document),
 const DEATH_SCREEN_CLICK_TIMEOUT = 1000;
 
 document.addEventListener('DOMContentLoaded', function() {
-    var data = game.getGameSavedData();
-    gbId('CharacterAvatar').addEventListener('click', function() {
-        selectedCharacterIndex = selectedCharacterIndex + 1 > window.characterNames.length - 1 ? 0 : selectedCharacterIndex + 1;
-        updateSelectedCharacterAvatar();
+    var data = game.getGameSavedData(),
+        rotateCharacter = function(isNext) {
+            selectedCharacterIndex += isNext ? 1 : -1;
+            if(selectedCharacterIndex < 0) {
+                selectedCharacterIndex = window.characterNames.length - 1;
+            }
+            if(!window.characterNames[selectedCharacterIndex]) {
+                selectedCharacterIndex = 0;
+            }
+            updateSelectedCharacterAvatar();
+        };
+    gbId('CharacterSelectionLeftArrow').addEventListener('click', function() {
+        rotateCharacter(false);
+    });
+    gbId('CharacterSelectionRightArrow').addEventListener('click', function() {
+        rotateCharacter(true);
     });
     data && utils.createRequest('/player/' + data.playerId, 'GET', null, function(playerData) {
         setDomElementVisibility(gbId('ContinueGameItemsContainer'), !!playerData);
