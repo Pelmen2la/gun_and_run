@@ -3,15 +3,22 @@ import touchPosition from 'touch-position';
 import touch from 'touches';
 
 var cursors = {},
-    mobileStickDirection = '';
+    mobileStickDirection = '',
+    wKey, dKey, sKey, aKey;
 
 function init(handlers) {
     cursors = game.instance.input.keyboard.createCursorKeys();
     game.instance.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
     game.instance.input.keyboard.addKey(Phaser.Keyboard.R).processKeyDown = handlers.onPortalButtonDown;
+    game.instance.input.keyboard.addKey(Phaser.Keyboard.Z).processKeyDown = handlers.onChangeWeaponButtonDown;
+    wKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.W);
+    dKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.D);
+    sKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.S);
+    aKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.A);
     initMobileStick();
     initMobileShotButton(handlers.onShotButtonPress);
     touch(document.getElementById('PortalIcon')).on('start', handlers.onPortalButtonDown);
+    touch(document.getElementById('PlayerWeaponIcon')).on('start', handlers.onChangeWeaponButtonDown);
 };
 
 function initMobileShotButton(shotFn) {
@@ -128,23 +135,24 @@ function getMobileStickMoveDirection() {
 
 function getMoveDirection() {
     var mobileMoveDirection = getMobileStickMoveDirection();
+    window.c = cursors;
     if(mobileMoveDirection) {
         return mobileMoveDirection;
-    } else if(cursors.up.isDown && cursors.left.isDown) {
+    } else if((cursors.up.isDown && cursors.left.isDown) || (wKey.isDown && aKey.isDown)) {
         return 'upleft';
-    } else if(cursors.up.isDown && cursors.right.isDown) {
+    } else if((cursors.up.isDown && cursors.right.isDown) || (wKey.isDown && dKey.isDown)) {
         return 'upright';
-    } else if(cursors.down.isDown && cursors.left.isDown) {
+    } else if((cursors.down.isDown && cursors.left.isDown) || (sKey.isDown && aKey.isDown)) {
         return 'downleft';
-    } else if(cursors.down.isDown && cursors.right.isDown) {
+    } else if((cursors.down.isDown && cursors.right.isDown) || (sKey.isDown && dKey.isDown)) {
         return 'downright';
-    } else if(cursors.up.isDown) {
+    } else if(cursors.up.isDown || wKey.isDown) {
         return 'up';
-    } else if(cursors.left.isDown) {
+    } else if(cursors.left.isDown || aKey.isDown) {
         return 'left';
-    } else if(cursors.right.isDown) {
+    } else if(cursors.right.isDown || dKey.isDown) {
         return 'right';
-    } else if(cursors.down.isDown) {
+    } else if(cursors.down.isDown || sKey.isDown) {
         return 'down';
     }
     return '';

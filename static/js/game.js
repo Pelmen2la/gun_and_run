@@ -116,7 +116,8 @@ function initGameData(data) {
 function getControlsHandlers() {
     var handlers = {
         onShotButtonPress: onShotButtonPress,
-        onPortalButtonDown: onPortalButtonDown
+        onPortalButtonDown: onPortalButtonDown,
+        onChangeWeaponButtonDown: onChangeWeaponButtonDown
     };
     return handlers;
 };
@@ -133,7 +134,7 @@ function onShotButtonPress() {
             ensurePlayerSelectedWeapon();
         }
         shot(playerWeapon.name);
-        userInterface.updatePlayerWeaponPanel(getPlayerSelectedWeapon());
+        updatePlayerWeaponInterface();
     }
 };
 
@@ -142,6 +143,11 @@ function onPortalButtonDown() {
         window.clearInterval(gameData.sendPlayerInfoIntevalId);
         socket.emit('portal', { playerId: gameData.player.data.id, roomId: gameData.roomId });
     }
+};
+
+function onChangeWeaponButtonDown() {
+    var weaponIndex = gameData.player.data.selectedWeaponIndex + 1;
+    setPlayerSelectedWeapon(gameData.player.data.weapons[weaponIndex] ? weaponIndex : 0);
 };
 
 function shot(weaponName) {
@@ -233,8 +239,6 @@ function getSocketHandlers() {
             if(selectedWeaponIndex !== -1) {
                 setPlayerSelectedWeapon(selectedWeaponIndex);
             }
-            ensurePlayerSelectedWeapon();
-            updatePlayerInterface();
         },
         onEnduranceItemPickuped: function(data) {
             map.hideEnduranceItem(data.itemId, data.time);
@@ -284,12 +288,18 @@ function getPlayerSelectedWeapon() {
 
 function setPlayerSelectedWeapon(weaponIndex) {
     gameData.player.data.selectedWeaponIndex = weaponIndex;
+    ensurePlayerSelectedWeapon();
 };
 
 function ensurePlayerSelectedWeapon() {
     var index = gameData.player.data.selectedWeaponIndex,
         weaponsCount = gameData.player.data.weapons.length;
     (index < 0 || index > weaponsCount - 1) && setPlayerSelectedWeapon(weaponsCount - 1);
+    updatePlayerWeaponInterface();
+};
+
+function updatePlayerWeaponInterface() {
+    userInterface.updatePlayerWeaponPanel(getPlayerSelectedWeapon(), gameData.player.data.weapons.length > 1);
 };
 
 function updatePlayerPosition() {
@@ -337,7 +347,7 @@ function removePlayer(playerId) {
 
 function updatePlayerInterface() {
     var playerData = gameData.player.data;
-    userInterface.updatePlayerInterface(playerData, getPlayerSelectedWeapon());
+    userInterface.updatePlayerInterface(playerData, getPlayerSelectedWeapon(), gameData.player.data.weapons.length > 1);
 };
 
 

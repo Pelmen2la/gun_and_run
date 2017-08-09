@@ -155,6 +155,15 @@ h1 {
     z-index: 5;
 }
 
+.change-weapon-tooltip-icon {
+    position: absolute;
+    right: 0px;
+}
+
+.mobile .change-weapon-tooltip-icon {
+    display: none;
+}
+
 .mobile-interface-container {
     position: absolute;
     width: 100%;

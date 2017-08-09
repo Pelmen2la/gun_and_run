@@ -78,9 +78,9 @@ function updateSelectedCharacterAvatar() {
     gbId('CharacterAvatar').src = utils.stringFormat('{0}{1}.gif',consts.CHARACTERS_GIFS_PATH, getSelectedCharacterName());
 };
 
-function updatePlayerInterface(playerData, selectedWeaponData) {
+function updatePlayerInterface(playerData, selectedWeaponData, hasMutipleWeapons) {
     updatePlayerEndurancePanels(playerData.endurance);
-    updatePlayerWeaponPanel(selectedWeaponData);
+    updatePlayerWeaponPanel(selectedWeaponData, hasMutipleWeapons);
     updatePlayerScoreCounter(playerData.score, playerData.rank);
 };
 
@@ -108,10 +108,11 @@ function updatePlayerHpPanel(hp) {
     gbId('PlayerHpBar').innerHTML = hpHeartsHtml;
 };
 
-function updatePlayerWeaponPanel(selectedWeaponData) {
+function updatePlayerWeaponPanel(selectedWeaponData, showChangeWeaponTooltipIcon) {
     var panel = gbId('PlayerWeaponBar');
     panel.querySelector('img').src = utils.stringFormat('{0}{1}.png', consts.WEAPONS_ICONS_PATH, selectedWeaponData.name);
     panel.querySelector('.numbers').innerHTML = selectedWeaponData.ammo == null ? '' : getNumberHtml(selectedWeaponData.ammo);
+    setDomElementVisibility(gbId('ChangeWeaponTooltipIcon'), showChangeWeaponTooltipIcon);
 };
 
 function updatePlayerArmorPanel(armorCount) {
