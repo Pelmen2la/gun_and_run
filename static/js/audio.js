@@ -14,7 +14,7 @@ function loadResources() {
 
 function playWeaponShot(name) {
     if(!shotSounds[name]) {
-        shotSounds[name] = game.instance.add.audio(name);
+        shotSounds[name] = game.instance.add.audio(name, 0.1);
     }
     shotSounds[name].play();
 };

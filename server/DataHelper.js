@@ -42,14 +42,15 @@ function getPlayerNewGameData(id, position, socketId, callback) {
     });
 };
 
-function getNewPlayer(position, socketId, login, characterName) {
+function getNewPlayer(position, socketId, login, characterName, isBot) {
     var player = {
         id: utils.getUid(),
         score: 0,
         rank: RANK_LIMIT,
         login: login || getGuestLogin(),
         characterName: characterName,
-        lastLoginTime: utils.getNowTime()
+        lastLoginTime: utils.getNowTime(),
+        isBot: isBot
     };
     (new Player(player)).save();
     extendPlayerWithNewGameData(player, position, socketId);
@@ -62,7 +63,7 @@ function extendPlayerWithNewGameData(player, position, socketId) {
         lastUpdateTime: utils.getNowTime(),
         idDead: false,
         score: 0,
-        weapons: [weapons.getWeaponByName('pistol', true)],
+        weapons: getPlayerStartWeapons(),
         endurance: {
             hp: 100,
             armor: 0
@@ -75,6 +76,10 @@ function extendPlayerWithNewGameData(player, position, socketId) {
     };
     utils.forEachEntryInObject(props, (key, data) => player[key] = data);
     return player;
+};
+
+function getPlayerStartWeapons() {
+    return [weapons.getWeaponByName('pistol', true)];
 };
 
 function getPlayerRank(playerId, callback) {
@@ -93,18 +98,18 @@ function getNewMap(callback) {
         enduranceItems = [],
         weaponItems = [],
         wallsCache = {},
-        tileDimension = 32,
-        bordersWidth = tileDimension * 6,
+        tileSize = 32,
+        bordersWidth = tileSize * 6,
         xDimension = getRandomDimension(),
         yDimension = getRandomDimension(),
         getBaseTileData = function(x, y, offsetX, offsetY) {
             return {
-                x: bordersWidth + x * tileDimension - (offsetX || 0),
-                y: bordersWidth + y * tileDimension - (offsetY || 0)
+                x: bordersWidth + x * tileSize - (offsetX || 0),
+                y: bordersWidth + y * tileSize - (offsetY || 0)
             }
         },
         getItemTileData = function(x, y) {
-            var data = getBaseTileData(x, y,  tileDimension / 2,  tileDimension / 2);
+            var data = getBaseTileData(x, y,  tileSize / 2,  tileSize / 2);
             data.id = utils.getUid();
             data.lastPickupTime = 0;
             return data;
@@ -174,7 +179,7 @@ function getNewMap(callback) {
             id: utils.getUid(),
             date: new Date(),
             landscapeType: folders[utils.getRandomInt(folders.length - 1)],
-            tileDimension: tileDimension,
+            tileSize: tileSize,
             bordersWidth: bordersWidth,
             dimension: {
                 x: xDimension,
@@ -192,6 +197,14 @@ function getNewMap(callback) {
     });
 };
 
+function getPlayerSpawnPosition(map) {
+    var groundTiles = map.tiles.filter(function(tile) {
+            return tile.tileType === 'ground';
+        }),
+        playerStartTile = groundTiles[utils.getRandomInt(groundTiles.length - 1)];
+    return {x: playerStartTile.x + map.tileSize / 2, y: playerStartTile.y + map.tileSize / 2};
+};
+
 function getRandomDimension() {
     return Math.round(30 + 20 * Math.random());
 };
@@ -200,7 +213,9 @@ module.exports = {
     getNewMap: getNewMap,
     getNewPlayer: getNewPlayer,
     getPlayer: getPlayer,
+    getPlayerStartWeapons: getPlayerStartWeapons,
     getPlayerRank: getPlayerRank,
     setPlayerData: setPlayerData,
-    getPlayerNewGameData: getPlayerNewGameData
+    getPlayerNewGameData: getPlayerNewGameData,
+    getPlayerSpawnPosition: getPlayerSpawnPosition
 };

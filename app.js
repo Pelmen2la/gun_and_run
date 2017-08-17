@@ -13,7 +13,7 @@ var server = app.listen(process.env.PORT || 3103, 'localhost', function () {
 
 require('./server/config/index')(app);
 require('./server/routes/index')(app);
-require('./server/Socket')(app);
+require('./server/Socket').init();
 
 process.on('uncaughtException', function(err) {
     console.error(err);

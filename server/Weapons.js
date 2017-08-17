@@ -67,8 +67,13 @@ function getWeaponByName(name, partialData) {
     } : utils.getObjectClone(weapon);
 };
 
+function isWeaponCanShoot(weapon, pingTolerance) {
+    return utils.getNowTime() - (weapon.lastShotTime || 0) > getWeaponByName(weapon.name).reloadTime - (pingTolerance || 0);
+};
+
 module.exports = {
     getWeapons: getWeapons,
     getNotStandardWeapons: getNotStandardWeapons,
-    getWeaponByName: getWeaponByName
+    getWeaponByName: getWeaponByName,
+    isWeaponCanShoot: isWeaponCanShoot
 };

@@ -2,8 +2,10 @@ import game from './game.js';
 import consts from './consts.js';
 import utils from './../../server/Utils.js'
 import weapons from './../../server/Weapons.js'
+import jointCode from './../../server/JointCode.js'
 
-const flamethrowerFlameSizes = [[8, 11], [10, 13], [16, 16], [32, 32]];
+const flamethrowerFlameSizes = [[8, 11], [10, 13], [16, 16], [32, 32]],
+    getSpriteAnimProps = jointCode.getSpriteAnimProps;
 
 function loadResources() {
     var load = game.instance.load.spritesheet.bind(game.instance.load);
@@ -76,27 +78,6 @@ function hideSprite(sprite, hideTime) {
         sprite.alpha = 1;
         sprite.body.enable = true;
     }, hideTime);
-};
-
-function getSpriteAnimProps(moveDirection) {
-    var props = {
-        upleft: [-0.7, -0.7, 'upright', true, false, 135],
-        upright: [0.7, -0.7, 'upright', false, false, 45],
-        downleft: [-0.7, 0.7, 'downright', true, false, 225],
-        downright: [0.7, 0.7, 'downright', false, false, 315],
-        up: [0, -1, 'up', false, false, 90],
-        left: [-1, 0, 'right', true, false, 180],
-        right: [1, 0, 'right', false, false, 0],
-        down: [0, 1, 'down', false, false, 90]
-    }[moveDirection];
-    return {
-        vX: props[0],
-        vY: props[1],
-        anim: props[2],
-        flipX: props[3],
-        flipY: props[4],
-        angle: props[5]
-    }
 };
 
 function createPlayer(data) {
@@ -177,8 +158,9 @@ function createBullet(data, timeDelta = 0) {
         weapon = weapons.getWeaponByName(data.weaponName),
         speed = weapon.bulletSpeed,
         animProps = getSpriteAnimProps(pos.direction),
-        x = pos.x + (animProps.vX * speed * timeDelta),
-        y = pos.y + (animProps.vY * speed * timeDelta),
+        baseOffset = getBaseBulletOffset(animProps.vX, animProps.vY),
+        x = pos.x + baseOffset.x + (animProps.vX * speed * timeDelta),
+        y = pos.y + baseOffset.y + (animProps.vY * speed * timeDelta),
         vX = animProps.vX * speed,
         vY = animProps.vY * speed,
         bullet = getSprite(weapon.name + 'bullet', x, y);
@@ -190,7 +172,7 @@ function createBullet(data, timeDelta = 0) {
     bullet.data = {
         playerId: data.playerId,
         damage: data.damage,
-        id: data.id
+        id: data.bulletId
     };
     bullet.body.velocity.x = vX;
     bullet.body.velocity.y = vY;
@@ -202,13 +184,12 @@ function createBullet(data, timeDelta = 0) {
 function createFlamethrowerFlame(data, flameIndex) {
     var pos = data.positionInfo,
         animProps = getSpriteAnimProps(pos.direction),
-        baseXOffset = consts.LANDSCAPE_TILE_SIZE * 1.5 * animProps.vX,
-        baseYOffset = consts.LANDSCAPE_TILE_SIZE * 1.5 * animProps.vY,
+        baseOffset = getBaseBulletOffset(animProps.vX, animProps.vY),
         flameSizes = flamethrowerFlameSizes.slice(0, flameIndex + 1),
         flameXLength = flameSizes.reduce((pV, cV) => pV + cV[0], 0) + flameSizes.length * 3,
         flameYLength = flameSizes.reduce((pV, cV) => pV + cV[1], 0) + flameSizes.length * 3,
-        x = pos.x + baseXOffset + (flameXLength - flamethrowerFlameSizes[flameIndex][0] / 2) * animProps.vX,
-        y = pos.y + baseYOffset + (flameYLength - flamethrowerFlameSizes[flameIndex][1] / 2) * animProps.vY,
+        x = pos.x + baseOffset.x * 3 + (flameXLength - flamethrowerFlameSizes[flameIndex][0] / 2) * animProps.vX,
+        y = pos.y + baseOffset.y * 3 + (flameYLength - flamethrowerFlameSizes[flameIndex][1] / 2) * animProps.vY,
         flame = getSprite(getFlamethrowerFlameTileName(flameIndex), x, y);
     flame.data = {
         playerId: data.playerId,
@@ -216,6 +197,13 @@ function createFlamethrowerFlame(data, flameIndex) {
         id: data.id
     };
     return flame;
+};
+
+function getBaseBulletOffset(vX, vY) {
+    return {
+        x: consts.LANDSCAPE_TILE_SIZE / 2 * vX,
+        y: consts.LANDSCAPE_TILE_SIZE / 2 * vY
+    }
 };
 
 

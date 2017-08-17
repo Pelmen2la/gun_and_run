@@ -61,12 +61,14 @@ function checkCollision() {
             });
         },
         tryEmitHitOnCollide = function(bullet, player) {
-            bullet.data.playerId !== player.data.id && socket.emit('hit', {
-                roomId: gameData.roomId,
-                targetId: player.data.id,
-                playerId: bullet.data.playerId,
-                bulletId: bullet.data.id
-            });
+            if(bullet.data.playerId !== player.data.id) {
+                socket.emit('hit', {
+                    roomId: gameData.roomId,
+                    targetId: player.data.id,
+                    playerId: bullet.data.playerId,
+                    bulletId: bullet.data.id
+                });
+            }
         };
 
 
@@ -101,15 +103,18 @@ function checkCollision() {
 function initGameData(data) {
     game.world.removeAll();
     map.drawMap(data.map);
+    var player = spritesFactory.createPlayer(data.player);
     gameData = {
         map: data.map,
-        player: spritesFactory.createPlayer(data.player),
+        player: player,
         players: {},
         playersGroup: game.add.group(),
         bulletsGroup: game.add.group(),
         flameGroup: game.add.group(),
         roomId: data.roomId
     };
+    gameData.players[player.data.id] = player;
+    gameData.playersGroup.add(player);
     game.camera.follow(gameData.player);
 };
 
@@ -151,7 +156,7 @@ function onChangeWeaponButtonDown() {
 };
 
 function shot(weaponName) {
-    var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, id: utils.getUid(),
+    var data = { playerId: gameData.player.data.id, roomId: gameData.roomId, weaponName: weaponName, bulletId: utils.getUid(),
         positionInfo: getPlayerPositionInfo(gameData.player, 'look', false) };
     socket.emit('shot', data);
     weaponName === 'flamethrower' ? addFlamethrowerFlame(data) : addBullets(data);
@@ -174,7 +179,7 @@ function addBulletCore(data, deviationAngle) {
     data.deviationAngle = deviationAngle || 0;
     audio.playWeaponShot(data.weaponName);
     gameData.bulletsGroup.add(spritesFactory.createBullet(data));
-
+    console.log(gameData.bulletsGroup.children);
 };
 
 function addFlamethrowerFlame(data) {

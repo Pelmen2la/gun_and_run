@@ -3,7 +3,7 @@ var mongoose = require('mongoose'),
         id: String,
         date: Date,
         landscapeType: String,
-        tileDimension: Number,
+        tileSize: Number,
         bordersWidth: Number,
         dimension: {
             x: Number,
