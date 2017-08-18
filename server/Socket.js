@@ -4,7 +4,8 @@ const ROOM_UPDATE_INTERVAL = 100,
     ROOM_MAX_PLAYERS_COUNT = 10,
     PLAYER_DROP_TIMEOUT = 10000;
 
-var io = require('socket.io').listen(8100),
+var socketIO = require('socket.io'),
+    io,
     utils = require('./Utils'),
     dataHelper = require('./DataHelper.js'),
     weapons = require('./Weapons.js'),
@@ -14,7 +15,8 @@ var io = require('socket.io').listen(8100),
     rooms = [],
     roomsCache = {};
 
-function init() {
+function init(server) {
+    io = socketIO(server);
     io.sockets.on('connection', (socket) => {
         socket.on('joinGame', onSocketJoinGame);
         socket.on('shot', onSocketShot);
