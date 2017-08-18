@@ -87,7 +87,7 @@ function findPathToTarget(map, startCoord, targetCoord) {
         });
     };
 
-    var minPoint = map.bordersWidth / map.tileSize - 1, cellCache = {}, cellArr = [startCoord];
+    var minPoint = map.bordersWidth / map.tileSize - 1, cellCache = {}, pathCellArr = [startCoord];
     cellCache[getCoordCode(startCoord)] = 0;
     if(!map.wallCache) {
         map.wallCache = {};
@@ -96,9 +96,9 @@ function findPathToTarget(map, startCoord, targetCoord) {
             map.wallCache[code] = t.tileType === 'wall';
         });
     }
-    while(cellCache[getCoordCode(targetCoord)] === undefined) {
+    while(pathCellArr.length && cellCache[getCoordCode(targetCoord)] === undefined) {
         var newCellArr = [];
-        cellArr.forEach((c) => {
+        pathCellArr.forEach((c) => {
             forEachShift(c, (x, y, code) => {
                 if(cellCache[code] === undefined && x >= minPoint && y >= minPoint && x <= minPoint + map.dimension.x && y <= minPoint + map.dimension.y) {
                     var isWall = map.wallCache[code];
@@ -110,7 +110,7 @@ function findPathToTarget(map, startCoord, targetCoord) {
                 }
             });
         });
-        cellArr = newCellArr;
+        pathCellArr = newCellArr;
     }
     var path = [targetCoord];
     while(cellCache[getCoordCode(path[path.length - 1])] !== 1 && cellCache[getCoordCode(path[path.length - 1])] !== 0) {
@@ -122,6 +122,10 @@ function findPathToTarget(map, startCoord, targetCoord) {
                 path.push({ x: x, y: y });
             }
         });
+        if(!cellFounded) {
+            path = [startCoord];
+            break;
+        }
     }
     return path;
 };

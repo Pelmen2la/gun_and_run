@@ -7,14 +7,27 @@ var cursors = {},
     wKey, dKey, sKey, aKey;
 
 function init(handlers) {
-    cursors = game.instance.input.keyboard.createCursorKeys();
-    game.instance.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
-    game.instance.input.keyboard.addKey(Phaser.Keyboard.R).processKeyDown = handlers.onPortalButtonDown;
-    game.instance.input.keyboard.addKey(Phaser.Keyboard.Z).processKeyDown = handlers.onChangeWeaponButtonDown;
-    wKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.W);
-    dKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.D);
-    sKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.S);
-    aKey = game.instance.input.keyboard.addKey(Phaser.Keyboard.A);
+    initKeyboard(handlers);
+    initTouchControls(handlers);
+};
+
+function initKeyboard(handlers) {
+    var keyboard = game.instance.input.keyboard;
+    cursors = keyboard.createCursorKeys();
+    keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
+    keyboard.addKey(Phaser.Keyboard.R).processKeyDown = handlers.onPortalButtonDown;
+    keyboard.addKey(Phaser.Keyboard.Z).processKeyDown = handlers.onChangeWeaponButtonDown;
+    wKey = keyboard.addKey(Phaser.Keyboard.W);
+    dKey = keyboard.addKey(Phaser.Keyboard.D);
+    sKey = keyboard.addKey(Phaser.Keyboard.S);
+    aKey = keyboard.addKey(Phaser.Keyboard.A);
+};
+
+function clearKeyboardControls() {
+    game.instance.input.keyboard.clearCaptures();
+};
+
+function initTouchControls(handlers) {
     initMobileStick();
     initMobileShotButton(handlers.onShotButtonPress);
     touch(document.getElementById('PortalIcon')).on('start', handlers.onPortalButtonDown);
@@ -160,5 +173,7 @@ function getMoveDirection() {
 
 export default {
     init: init,
+    initKeyboard: initKeyboard,
+    clearKeyboardControls: clearKeyboardControls,
     getMoveDirection: getMoveDirection
 }

@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     gbId('CharacterSelectionRightArrow').addEventListener('click', function() {
         rotateCharacter(true);
     });
+    setDomElementVisibility(gbId('LoadingMask'), false);
     data && utils.createRequest('/player/' + data.playerId, 'GET', null, function(playerData) {
         setDomElementVisibility(gbId('ContinueGameItemsContainer'), !!playerData);
         updateSelectedCharacterAvatar();

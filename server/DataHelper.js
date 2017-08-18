@@ -155,13 +155,13 @@ function getNewMap(callback) {
                             utils.getRandomInt((j + 1) * sectorYSize, j * sectorYSize)];
             };
             var item = getItemTileData(itemPos[0], itemPos[1]);
-            if(utils.flipCoin()) {
+            if(false && utils.flipCoin()) {
                 item.itemType = utils.flipCoin() ? 'armor' : 'hp';
                 item.respawnTime = 10000;
                 enduranceItems.push(item);
             } else {
                 var weaponsArr = weapons.getNotStandardWeapons(),
-                    randomWeapon = weaponsArr[utils.getRandomInt(weaponsArr.length - 1)];
+                    randomWeapon = weaponsArr[4 || utils.getRandomInt(weaponsArr.length - 1)];
                 item.name = randomWeapon.name;
                 item.respawnTime = 10000;
                 weaponItems.push(item);

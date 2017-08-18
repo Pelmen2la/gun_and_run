@@ -45,10 +45,10 @@ const pistol = {
     },
     flamethrower = {
         name: 'flamethrower',
-        ammo: 10,
+        ammo: 30,
         damage: 30,
         bulletSpeed: 700,
-        reloadTime: 350
+        reloadTime: 150
     };
 
 function getWeapons() {

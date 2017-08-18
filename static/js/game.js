@@ -29,7 +29,6 @@ function preload() {
 function create() {
     game.time.advancedTiming = true;
     game.renderer.renderSession.roundPixels = true;
-    controls.init(getControlsHandlers());
     socket.init(getSocketHandlers(), function() {
         userInterface.addOnLoginAction(function(data) {
             socket.emit('joinGame', data);
@@ -103,6 +102,7 @@ function checkCollision() {
 function initGameData(data) {
     game.world.removeAll();
     map.drawMap(data.map);
+    controls.init(getControlsHandlers());
     var player = spritesFactory.createPlayer(data.player);
     gameData = {
         map: data.map,
@@ -128,6 +128,7 @@ function getControlsHandlers() {
 };
 
 function onShotButtonPress() {
+    ensurePlayerSelectedWeapon();
     var playerWeapons = gameData.player.data.weapons,
         playerWeapon = getPlayerSelectedWeapon(),
         weaponData = weapons.getWeaponByName(playerWeapon.name);
@@ -193,8 +194,8 @@ function addFlamethrowerFlame(data) {
             counter == 4 && window.clearInterval(flameSpritesIntervalId);
             window.setTimeout(function() {
                 gameData.flameGroup.remove(flame);
-            }, 90);
-        }, 75);
+            }, 150);
+        }, 100);
 };
 
 
@@ -213,6 +214,7 @@ function getSocketHandlers() {
         },
         onJoinRoomData: function(data) {
             initGameData(data);
+            controls.initKeyboard(getControlsHandlers());
             userInterface.setGameInterfaceVisibility(true);
             userInterface.setDeathScreenVisibility(false);
             gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
@@ -227,6 +229,7 @@ function getSocketHandlers() {
             window.clearInterval(gameData.sendPlayerInfoIntevalId);
             userInterface.setGameInterfaceVisibility(false);
             userInterface.setDeathScreenVisibility(true);
+            controls.clearKeyboardControls();
         },
         onPlayerLeave: function(playerId) {
             removePlayer(playerId);

@@ -194,7 +194,7 @@ function createFlamethrowerFlame(data, flameIndex) {
     flame.data = {
         playerId: data.playerId,
         damage: data.damage,
-        id: data.id
+        id: data.bulletId
     };
     return flame;
 };
