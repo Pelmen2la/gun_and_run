@@ -3,6 +3,7 @@ import touchPosition from 'touch-position';
 import touch from 'touches';
 
 var cursors = {},
+    isControlsEnabled = false,
     mobileStickDirection = '',
     wKey, dKey, sKey, aKey;
 
@@ -14,24 +15,30 @@ function init(handlers) {
 function initKeyboard(handlers) {
     var keyboard = game.instance.input.keyboard;
     cursors = keyboard.createCursorKeys();
-    keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
-    keyboard.addKey(Phaser.Keyboard.R).processKeyDown = handlers.onPortalButtonDown;
-    keyboard.addKey(Phaser.Keyboard.Z).processKeyDown = handlers.onChangeWeaponButtonDown;
+    keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = prepareHandler(handlers.onShotButtonPress);
+    keyboard.addKey(Phaser.Keyboard.R).processKeyDown = prepareHandler(handlers.onPortalButtonDown);
+    keyboard.addKey(Phaser.Keyboard.Z).processKeyDown = prepareHandler(handlers.onChangeWeaponButtonDown);
     wKey = keyboard.addKey(Phaser.Keyboard.W);
     dKey = keyboard.addKey(Phaser.Keyboard.D);
     sKey = keyboard.addKey(Phaser.Keyboard.S);
     aKey = keyboard.addKey(Phaser.Keyboard.A);
 };
 
-function clearKeyboardControls() {
-    game.instance.input.keyboard.clearCaptures();
-};
-
 function initTouchControls(handlers) {
     initMobileStick();
-    initMobileShotButton(handlers.onShotButtonPress);
-    touch(document.getElementById('PortalIcon')).on('start', handlers.onPortalButtonDown);
-    touch(document.getElementById('PlayerWeaponIcon')).on('start', handlers.onChangeWeaponButtonDown);
+    initMobileShotButton(prepareHandler(handlers.onShotButtonPress));
+    touch(document.getElementById('PortalIcon')).on('start', prepareHandler(handlers.onPortalButtonDown));
+    touch(document.getElementById('PlayerWeaponIcon')).on('start', prepareHandler(handlers.onChangeWeaponButtonDown));
+};
+
+function setControlsEnabled(enabled) {
+    isControlsEnabled = enabled;
+};
+
+function prepareHandler(handler) {
+    return function() {
+        isControlsEnabled && handler();
+    };
 };
 
 function initMobileShotButton(shotFn) {
@@ -147,6 +154,9 @@ function getMobileStickMoveDirection() {
 
 
 function getMoveDirection() {
+    if(!isControlsEnabled) {
+        return ''
+    }
     var mobileMoveDirection = getMobileStickMoveDirection();
     window.c = cursors;
     if(mobileMoveDirection) {
@@ -174,6 +184,6 @@ function getMoveDirection() {
 export default {
     init: init,
     initKeyboard: initKeyboard,
-    clearKeyboardControls: clearKeyboardControls,
+    setControlsEnabled: setControlsEnabled,
     getMoveDirection: getMoveDirection
 }

@@ -198,26 +198,38 @@ h1 {
     }
 }
 
-.death-screen {
+.fullscreen {
     position: fixed;
     width: 100%;
     height: 100%;
     cursor: pointer;
 
-    .mask {
+    .mask,
+    .text-container {
         position: absolute;
         width: 100%;
         height: 100%;
-        background: black;
-        opacity: 0.15;
     }
 
-    .text {
-        width: 100%;
+    .mask {
+        background: black;
+        opacity: 0.35;
+        z-index: 5;
+    }
+
+    .text-container {
         text-align: center;
-        position: absolute;
+        z-index: 10;
+    }
+
+    .death-screen-text {
+        text-align: center;
         top: calc(50% - 1em);
     }
+}
+
+.end-round-screen {
+
 }
 
 html.mobile .mobile-interface-container {

@@ -33,11 +33,9 @@ function create() {
         userInterface.addOnLoginAction(function(data) {
             socket.emit('joinGame', data);
         });
-        userInterface.addOnDeathScreenClickAction(function() {
+        userInterface.bindJoinGameFunctionToElements(function() {
             window.clearInterval(gameData.sendPlayerInfoIntevalId);
-            window.setTimeout(function() {
-                socket.emit('joinGame', {playerId: gameData.player.data.id});
-            }, 100);
+            window.setTimeout(()  => socket.emit('joinGame', {playerId: gameData.player.data.id}), 300);
         });
     });
     window.setInterval(checkCollision, 50);
@@ -200,24 +198,31 @@ function addFlamethrowerFlame(data) {
 
 
 function getSocketHandlers() {
+    function disableGame() {
+        window.clearInterval(gameData.sendPlayerInfoIntevalId);
+        userInterface.setGameInterfaceVisibility(false);
+        controls.setControlsEnabled(false);
+    };
+    function initGame(data) {
+        initGameData(data);
+        userInterface.setLoginPanelVisibility(false);
+        userInterface.setGameInterfaceVisibility(true);
+        userInterface.hideAllFullscreenMessages();
+        updatePlayerInterface(true);
+        controls.setControlsEnabled(true);
+        gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
+    };
+
     return {
         onJoinGameData: function(data) {
             setGameSavedData({
                 playerId: data.player.id
             });
-            initGameData(data);
-            userInterface.setGameInterfaceVisibility(true);
-            userInterface.setLoginPanelVisibility(false);
-            userInterface.setDeathScreenVisibility(false);
-            gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
-            updatePlayerInterface();
+            controls.initKeyboard(getControlsHandlers());
+            initGame(data);
         },
         onJoinRoomData: function(data) {
-            initGameData(data);
-            controls.initKeyboard(getControlsHandlers());
-            userInterface.setGameInterfaceVisibility(true);
-            userInterface.setDeathScreenVisibility(false);
-            gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
+            initGame(data);
         },
         onPlayersData: function(data) {
             updateOtherPlayersPosition(data);
@@ -226,10 +231,8 @@ function getSocketHandlers() {
             addShot(data);
         },
         onDeath: function() {
-            window.clearInterval(gameData.sendPlayerInfoIntevalId);
-            userInterface.setGameInterfaceVisibility(false);
             userInterface.setDeathScreenVisibility(true);
-            controls.clearKeyboardControls();
+            disableGame();
         },
         onPlayerLeave: function(playerId) {
             removePlayer(playerId);
@@ -256,6 +259,10 @@ function getSocketHandlers() {
         },
         onForceReload: function() {
             location.reload();
+        },
+        onEndRound: function(data) {
+            userInterface.showEndRoundResult(data);
+            disableGame();
         }
     }
 };

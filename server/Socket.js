@@ -1,8 +1,10 @@
 const ROOM_UPDATE_INTERVAL = 100,
+    SCORE_UPDATE_INTERVAL = 500,
+    SCORES_TO_WIN = 10,
     PING_TOLERANCE_TIME = 100,
     BULLET_LIFE_TIME = 2000,
     ROOM_MAX_PLAYERS_COUNT = 10,
-    PLAYER_DROP_TIMEOUT = 10000;
+    PLAYER_KICK_TIMEOUT = 10000;
 
 var socketIO = require('socket.io'),
     io,
@@ -13,7 +15,11 @@ var socketIO = require('socket.io'),
     jointCode = require('./JointCode.js'),
     bots = require('./Bots.js'),
     rooms = [],
-    roomsCache = {};
+    roomsCache = {},
+    players = [],
+    scoreArr = [],
+    lastScoreArrUpdateTime = utils.getNowTime(),
+    score = {};
 
 function init(server) {
     io = socketIO(server);
@@ -22,7 +28,6 @@ function init(server) {
         socket.on('shot', onSocketShot);
         socket.on('playerInfo', onSocketPlayerInfo);
         socket.on('hit', onSocketHit);
-        socket.on('respawnComplete', onSocketRespawnComplete);
         socket.on('pickupEnduranceItem', onSocketPickupEnduranceItem);
         socket.on('pickupWeaponItem', onSocketPickupWeaponItem);
         socket.on('portal', onSocketPortal);
@@ -32,20 +37,31 @@ function init(server) {
 
 function onSocketJoinGame(data) {
     var socket = this,
-        playerId = data.playerId;
-    findRoomForPlayer(playerId, null, function(room) {
-        var player = room.players[playerId],
-            joinGameFn = () => {
+        playerId = data.playerId,
+        player = players.find((p) => p.id == playerId),
+        exceptRoomId = player && player.isDead ? player.roomId : null;
+    score[playerId] = score[playerId] || 0;
+    findRoomForPlayer(playerId, exceptRoomId, function(room) {
+        var joinGameFn = () => {
+                if(players.indexOf(player) === -1) {
+                    players.push(player);
+                }
+                player.socketId = socket.id;
                 addPlayerToRoom(room, socket, player);
                 emitJoinGame(socket, room, player);
-            };
+            },
+            position = dataHelper.getPlayerSpawnPosition(room.map);
+
         if(player) {
-            player.socketId = socket.id;
+            removePlayerFromCurrentRoom(player);
+            if(player.isDead) {
+                dataHelper.extendPlayerWithNewGameData(player, position, socket.id);
+            }
             joinGameFn();
         } else {
-            var position = dataHelper.getPlayerSpawnPosition(room.map);
+
             dataHelper.getPlayerNewGameData(playerId, position, socket.id, function(playerData) {
-                player = playerData || dataHelper.getNewPlayer(position, socket.id, data.login, data.characterName);
+                player = playerData || dataHelper.getNewPlayer(position, socket.id, data.name, data.characterName);
                 joinGameFn();
             });
         }
@@ -95,22 +111,37 @@ function onSocketHit(data) {
         bullet.hitsCounter[target.id] = (bullet.hitsCounter[target.id] || 0) + 1;
         processPlayerDamage(target, bullet.damage);
         if(target.endurance.hp <= 0) {
-            owner.score += 1;
+            score[owner.id] = (score[owner.id] || 0) + 1;
             if(target.isBot) {
                 respawnBot(target, room.map);
             } else {
+                target.isDead = true;
                 targetSocket.emit('death');
-                removePlayerFromRoom(room, targetSocket, target);
             }
-            dataHelper.setPlayerData(owner.id, { score: owner.score }, () => {
-                dataHelper.getPlayerRank(owner.id, (rank) => {
-                    io.sockets.connected[owner.socketId].emit('score', { score: owner.score, rank: rank });
-                });
-            });
+            if(score[owner.id] >= SCORES_TO_WIN) {
+                endRound();
+            }
         } else {
             !target.isBot && targetSocket.emit('enduranceInfo', target.endurance);
         }
     }
+};
+
+function endRound() {
+    var scoreArr = getScoreArray(true),
+        roundResult = scoreArr.slice(0, 10).map(function(r) {
+            return { name: r.name, score: r.score };
+        });
+    scoreArr.forEach((r, i) => {
+        tryEmit(r.socketId, 'endRound', {topTen: roundResult, rank: i + 1, score: r.score });
+    });
+    utils.forEachEntryInObject(rooms, (id, room) => {
+        var bots = room.bots;
+        room.players = {};
+        bots.forEach((b) => room.players[b.id] = b);
+    });
+    score = {};
+    players = [];
 };
 
 function respawnBot(bot, map) {
@@ -156,11 +187,6 @@ function onSocketShot(shotData) {
     }
 };
 
-function onSocketRespawnComplete(data) {
-    var player = getPlayerBySocketData(data);
-    player && (player.isDead = false);
-};
-
 function onSocketPickupEnduranceItem(data) {
     tryPickupItem(data, 'endurance', function(room, player, item) {
         item.itemType == 'armor' && (player.endurance.armor = 10);
@@ -197,7 +223,7 @@ function onSocketPortal(data) {
         player = getPlayerBySocketData(data);
     if(currentRoom && player) {
         findRoomForPlayer(player.id, currentRoom.id, function(newRoom) {
-            removePlayerFromRoom(currentRoom, socket, player);
+            removePlayerFromCurrentRoom(currentRoom, socket, player);
             addPlayerToRoom(newRoom, socket, player);
             utils.extendObject(player.positionInfo, dataHelper.getPlayerSpawnPosition(newRoom.map));
             socket.emit('joinRoomData', getJoinRoomData(newRoom, player));
@@ -222,6 +248,23 @@ function getPlayer(roomId, playerId) {
     return room ? room.players[playerId] : null;
 };
 
+function getScoreArray(forceCalculate) {
+    if(forceCalculate || utils.getNowTime() - lastScoreArrUpdateTime > SCORE_UPDATE_INTERVAL) {
+        lastScoreArrUpdateTime = utils.getNowTime();
+        scoreArr = [];
+        players.forEach((p) => {
+            scoreArr.push({score: score[p.id], socketId: p.socketId, name: p.name});
+        });
+        scoreArr.sort((a, b) => b.score - a.score);
+    }
+    return scoreArr;
+};
+
+function tryEmit(socketId, eventName, data) {
+    var socket = io.sockets.connected[socketId];
+    socket && socket.emit(eventName, data)
+};
+
 function processRoomsState() {
     utils.forEachEntryInObject(roomsCache, function(roomId, room) {
         var now = utils.getNowTime();
@@ -231,11 +274,14 @@ function processRoomsState() {
                 bots.processBotsMoves(room);
             } else if(timeAfterLastUpdate > ROOM_UPDATE_INTERVAL * 5) {
                 player.positionInfo.moveDirection = '';
-                if(timeAfterLastUpdate > PLAYER_DROP_TIMEOUT) {
-                    delete room.players[playerId];
+                if(timeAfterLastUpdate > PLAYER_KICK_TIMEOUT) {
+                    kickPlayer(player);
                     io.sockets.in(roomId).emit('playerLeave', room.playerId);
                 }
             }
+        });
+        getScoreArray().forEach((s, index) => {
+            tryEmit(s.socketId, 'score', {score: s.score || 0, rank: index + 1});
         });
         utils.forEachEntryInObject(room.bullets, function(bulletId, bullet) {
             if(now - bullet.time > BULLET_LIFE_TIME) {
@@ -276,15 +322,23 @@ function createNewRoom(callback) {
     });
 };
 
-function removePlayerFromRoom(room, socket, player) {
-    socket.leave(room.id);
-    delete room.players[player.id];
+function addPlayerToRoom(room, socket, player) {
+    var socket = io.sockets.connected[player.socketId];
+    socket.join(room.id);
+    room.players[player.id] = player;
+    player.roomId = room.id;
 };
 
-function addPlayerToRoom(room, socket, player) {
-    room.players[player.id] = player;
-    socket.join(room.id);
-    return player;
+function removePlayerFromCurrentRoom(player) {
+    var room = roomsCache[player.roomId],
+        socket = io.sockets.connected[player.socketId];
+    socket && socket.leave(room.id);
+    room && delete room.players[player.id];
+};
+
+function kickPlayer(player) {
+    removePlayerFromCurrentRoom(player);
+    players.splice(players.indexOf(player), 1);
 };
 
 module.exports = {

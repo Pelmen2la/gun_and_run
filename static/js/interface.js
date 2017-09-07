@@ -3,7 +3,6 @@ import game from './game.js';
 import consts from './consts.js';
 
 var gbId = document.getElementById.bind(document),
-    deathScreenClickTime = 0,
     selectedCharacterIndex = utils.getRandomInt(window.characterNames.length - 1);
 
 const DEATH_SCREEN_CLICK_TIMEOUT = 1000;
@@ -31,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setDomElementVisibility(gbId('ContinueGameItemsContainer'), !!playerData);
         updateSelectedCharacterAvatar();
         if(playerData) {
-            var text = utils.stringFormat('Continue game as <span class="red-text">{0}</span>', playerData.login);
+            var text = utils.stringFormat('Continue game as <span class="red-text">{0}</span>', playerData.name);
             gbId('ContinueGameButton').innerHTML = text;
         }
     });
@@ -53,6 +52,23 @@ function setDeathScreenVisibility(isVisible) {
     setDomElementVisibility(gbId('DeathScreen'), isVisible);
 };
 
+function showEndRoundResult(data) {
+    var screen = gbId('EndRoundScreen');
+    screen.querySelector('.winner-name').innerHTML = data.topTen[0].name;
+    screen.querySelector('.top-ten-container').innerHTML = data.topTen.map((p, i) => {
+        return utils.stringFormat('<li>' +
+            '<span class="player-name">{0}. {1}</span>' +
+            '<span class="player-score">{2}</span>' +
+            '</li>', i + 1, p.name, p.score);
+    }).join('');
+    ['score', 'rank'].forEach((prop) => screen.querySelector('.' + prop).innerHTML = data[prop]);
+    setDomElementVisibility(screen, true);
+};
+
+function hideAllFullscreenMessages() {
+    document.querySelectorAll('.fullscreen').forEach((e) => setDomElementVisibility(e, false));
+};
+
 function setDomElementVisibility(element, isVisible) {
     element.classList[isVisible ? 'remove' : 'add']('hidden');
 };
@@ -61,7 +77,7 @@ function addOnLoginAction(fn) {
     var loginInput = gbId('LoginInput'),
         loginFn = function() {
             fn({
-                login: loginInput.value,
+                name: loginInput.value,
                 characterName: getSelectedCharacterName()
             });
         };
@@ -75,12 +91,12 @@ function addOnLoginAction(fn) {
 };
 
 function addOnDeathScreenClickAction(fn) {
-    gbId('DeathScreen').addEventListener('click', function() {
-        if(utils.getNowTime() - deathScreenClickTime > DEATH_SCREEN_CLICK_TIMEOUT) {
-            fn();
-            deathScreenClickTime = utils.getNowTime();
-        }
-    });
+    gbId('DeathScreen').addEventListener('click', fn);
+};
+
+function bindJoinGameFunctionToElements(fn) {
+    gbId('DeathScreen').addEventListener('click', fn);
+    gbId('EndRoundScreen').addEventListener('click', fn);
 };
 
 function getSelectedCharacterName() {
@@ -144,7 +160,7 @@ function getNumberHtml(number, isBig) {
 
 export default {
     addOnLoginAction: addOnLoginAction,
-    addOnDeathScreenClickAction: addOnDeathScreenClickAction,
+    bindJoinGameFunctionToElements: bindJoinGameFunctionToElements,
     updatePlayerWeaponPanel: updatePlayerWeaponPanel,
     updatePlayerEndurancePanels: updatePlayerEndurancePanels,
     updatePlayerScoreCounter: updatePlayerScoreCounter,
@@ -152,6 +168,8 @@ export default {
     setLoginPanelVisibility: setLoginPanelVisibility,
     setGameInterfaceVisibility: setGameInterfaceVisibility,
     setDeathScreenVisibility: setDeathScreenVisibility,
-    setPortalIconVisibility: setPortalIconVisibility
+    setPortalIconVisibility: setPortalIconVisibility,
+    showEndRoundResult: showEndRoundResult,
+    hideAllFullscreenMessages: hideAllFullscreenMessages
 };
 

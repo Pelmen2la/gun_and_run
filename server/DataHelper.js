@@ -8,18 +8,13 @@ var utils = require('./Utils'),
     Map = mongoose.model('map'),
     Player = mongoose.model('player');
 
-const RANK_LIMIT = 10000;
-
 function getPlayer(id, callback) {
     Player.find({ id: id }, (err, data) => {
         var player = err || data.length === 0 ? null : data[0];
         if(player) {
             player.lastLoginTime = utils.getNowTime();
             player.save();
-            getPlayerRank(id, (rank) => {
-                player.set('rank', rank);
-                callback(player);
-            });
+            callback(player);
         } else {
             callback(player);
         }
@@ -42,12 +37,10 @@ function getPlayerNewGameData(id, position, socketId, callback) {
     });
 };
 
-function getNewPlayer(position, socketId, login, characterName, isBot) {
+function getNewPlayer(position, socketId, name, characterName, isBot) {
     var player = {
         id: utils.getUid(),
-        score: 0,
-        rank: RANK_LIMIT,
-        login: login || getGuestLogin(),
+        name: name || getGuestName(),
         characterName: characterName,
         lastLoginTime: utils.getNowTime(),
         isBot: isBot
@@ -61,8 +54,7 @@ function extendPlayerWithNewGameData(player, position, socketId) {
     var props = {
         socketId: socketId,
         lastUpdateTime: utils.getNowTime(),
-        idDead: false,
-        score: 0,
+        isDead: false,
         weapons: getPlayerStartWeapons(),
         endurance: {
             hp: 100,
@@ -82,14 +74,7 @@ function getPlayerStartWeapons() {
     return [weapons.getWeaponByName('pistol', true)];
 };
 
-function getPlayerRank(playerId, callback) {
-    Player.find(null, null, { sort: { score: -1 }, limit: RANK_LIMIT }, function(err, players) {
-        var index = players.indexOf(players.filter((p) => p.get('id') == playerId)[0]);
-        callback(index === -1 ? RANK_LIMIT : index);
-    });
-};
-
-function getGuestLogin() {
+function getGuestName() {
     return 'Guest_' + utils.getUid();
 };
 
@@ -212,9 +197,9 @@ function getRandomDimension() {
 module.exports = {
     getNewMap: getNewMap,
     getNewPlayer: getNewPlayer,
+    extendPlayerWithNewGameData: extendPlayerWithNewGameData,
     getPlayer: getPlayer,
     getPlayerStartWeapons: getPlayerStartWeapons,
-    getPlayerRank: getPlayerRank,
     setPlayerData: setPlayerData,
     getPlayerNewGameData: getPlayerNewGameData,
     getPlayerSpawnPosition: getPlayerSpawnPosition

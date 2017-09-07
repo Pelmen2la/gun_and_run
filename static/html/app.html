@@ -69,10 +69,24 @@
         </div>
     </div>
 
-    <div id="DeathScreen" class="death-screen hidden">
+    <div id="DeathScreen" class="fullscreen hidden">
         <div class="mask"></div>
-        <div class="text">
+        <div class="text-container death-screen-text">
             <h1 class="red-text">YOU DIED</h1><br>
+            <span>Click anywhere to continue</span>
+        </div>
+    </div>
+
+    <div id="EndRoundScreen" class="fullscreen hidden end-round-screen">
+        <div class="mask"></div>
+        <div class="text-container">
+            <h1>The winner is <span class="winner-name red-text"></span></h1><br>
+            <span>Top ten:</span>
+            <ul class="top-ten-container"></ul>
+            <br>
+            <span class="player-rank-info">
+                Your score: <span class="score red-text"></span>, rank: <span class="rank red-text">.</span>
+            </span><br>
             <span>Click anywhere to continue</span>
         </div>
     </div>

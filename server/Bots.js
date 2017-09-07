@@ -33,7 +33,7 @@ function processBotsMoves(room) {
         bot.positionInfo.y += consts.PLAYER_VELOCITY * animProps.vY * timeDiff;
 
         utils.forEachEntryInObject(room.players, (k, p) => {
-            if(p !== bot && (!target || getDistance(p.positionInfo, bot.positionInfo) < getDistance(target.positionInfo, bot.positionInfo))) {
+            if(!p.isDead && p !== bot && (!target || getDistance(p.positionInfo, bot.positionInfo) < getDistance(target.positionInfo, bot.positionInfo))) {
                 target = p;
             }
         });

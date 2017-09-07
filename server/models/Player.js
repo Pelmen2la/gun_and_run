@@ -2,8 +2,7 @@ var mongoose = require('mongoose'),
     Player = new mongoose.Schema({
         id: String,
         lastLoginTime: Number,
-        login: String,
-        score: Number,
+        name: String,
         rank: Number,
         characterName: String
     });
