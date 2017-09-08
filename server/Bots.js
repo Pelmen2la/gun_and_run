@@ -4,13 +4,6 @@ var utils = require('./Utils'),
     weapons = require('./Weapons.js'),
     dataHelper = require('./DataHelper');
 
-function addBotToRoom(room) {
-    var bot = dataHelper.getNewPlayer(dataHelper.getPlayerSpawnPosition(room.map), null, '', 'alex', true);
-    bot.botLastUpdateTime = utils.getNowTime();
-    room.players[bot.id] = bot;
-    room.bots.push(bot);
-};
-
 function processBotsMoves(room) {
     function getDistance(obj0, obj1) {
         return Math.sqrt(Math.pow(obj0.x - obj1.x, 2), Math.pow(obj0.y - obj1.y, 2));
@@ -32,7 +25,7 @@ function processBotsMoves(room) {
         bot.positionInfo.x += consts.PLAYER_VELOCITY * animProps.vX * timeDiff;
         bot.positionInfo.y += consts.PLAYER_VELOCITY * animProps.vY * timeDiff;
 
-        utils.forEachEntryInObject(room.players, (k, p) => {
+        utils.forEachEntryInObject(room.playersCache, (k, p) => {
             if(!p.isDead && p !== bot && (!target || getDistance(p.positionInfo, bot.positionInfo) < getDistance(target.positionInfo, bot.positionInfo))) {
                 target = p;
             }
@@ -158,6 +151,5 @@ function getDirectionByCoords(coords0, coords1, diagonalAllowed) {
 
 
 module.exports = {
-    addBotToRoom: addBotToRoom,
     processBotsMoves: processBotsMoves
 };

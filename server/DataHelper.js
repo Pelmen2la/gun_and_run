@@ -2,9 +2,11 @@
 
 var utils = require('./Utils'),
     weapons = require('./Weapons'),
+    bots = require('./Bots'),
     path = require('path'),
     fs = require('fs'),
     mongoose = require('mongoose'),
+    landscapeTypes,
     Map = mongoose.model('map'),
     Player = mongoose.model('player');
 
@@ -68,6 +70,24 @@ function extendPlayerWithNewGameData(player, position, socketId) {
     };
     utils.forEachEntryInObject(props, (key, data) => player[key] = data);
     return player;
+};
+
+function createNewRoom(callback) {
+    var room = {
+        id: utils.getUid(),
+        players: [],
+        playersCache: {},
+        bots: [],
+        bullets: {}
+    };
+    getNewMap(function(mapData) {
+        room.map = mapData;
+        var bot = getNewPlayer(getPlayerSpawnPosition(room.map), null, '', 'alex', true);
+        bot.botLastUpdateTime = utils.getNowTime();
+        room.playersCache[bot.id] = bot;
+        room.bots.push(bot);
+        callback && callback(room);
+    });
 };
 
 function getPlayerStartWeapons() {
@@ -159,11 +179,11 @@ function getNewMap(callback) {
         portalPos = [utils.getRandomInt(xDimension), utils.getRandomInt(yDimension)];
     }
 
-    fs.readdir(path.join(global.appRoot, '/static/images/landscape/'), (err, folders) => {
+    function createMapCore() {
         var map = Map({
             id: utils.getUid(),
             date: new Date(),
-            landscapeType: folders[utils.getRandomInt(folders.length - 1)],
+            landscapeType: landscapeTypes[utils.getRandomInt(landscapeTypes.length - 1)],
             tileSize: tileSize,
             bordersWidth: bordersWidth,
             dimension: {
@@ -179,7 +199,16 @@ function getNewMap(callback) {
                 callback(mapData.toObject());
             }
         );
-    });
+    }
+
+    if(landscapeTypes) {
+        createMapCore();
+    } else {
+        fs.readdir(path.join(global.appRoot, '/static/images/landscape/'), (err, folderNames) => {
+            landscapeTypes = folderNames;
+            createMapCore();
+        });
+    }
 };
 
 function getPlayerSpawnPosition(map) {
@@ -197,6 +226,7 @@ function getRandomDimension() {
 module.exports = {
     getNewMap: getNewMap,
     getNewPlayer: getNewPlayer,
+    createNewRoom: createNewRoom,
     extendPlayerWithNewGameData: extendPlayerWithNewGameData,
     getPlayer: getPlayer,
     getPlayerStartWeapons: getPlayerStartWeapons,
