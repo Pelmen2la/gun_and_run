@@ -4,6 +4,8 @@ var utils = require('./Utils'),
     weapons = require('./Weapons.js'),
     dataHelper = require('./DataHelper');
 
+const TARGET_UPDATE_TIME = 4000;
+
 function processBotsMoves(room) {
     function getDistance(obj0, obj1) {
         return Math.sqrt(Math.pow(obj0.x - obj1.x, 2), Math.pow(obj0.y - obj1.y, 2));
@@ -14,28 +16,26 @@ function processBotsMoves(room) {
             y: Math.trunc(obj.y / map.tileSize)
         }
     };
-    if(!room.players.length) {
-        return;
-    }
 
     var map = room.map,
         now = utils.getNowTime();
     room.bots.forEach((bot) => {
         var timeDiff = (now - bot.botLastUpdateTime) / 1000,
-            animProps = jointCode.getSpriteAnimProps(bot.positionInfo.direction),
-            target;
+            animProps = jointCode.getSpriteAnimProps(bot.positionInfo.direction);
 
         bot.positionInfo.x += consts.PLAYER_VELOCITY * animProps.vX * timeDiff;
         bot.positionInfo.y += consts.PLAYER_VELOCITY * animProps.vY * timeDiff;
 
-        utils.forEachEntryInObject(room.playersCache, (k, p) => {
-            if(!p.isDead && p !== bot && (!target || getDistance(p.positionInfo, bot.positionInfo) < getDistance(target.positionInfo, bot.positionInfo))) {
-                target = p;
-            }
-        });
-        if(target) {
+        var notDeadPlayers = room.players.filter((p) => !p.isDead);
+        if(notDeadPlayers.length === 0) {
+            bot.target = null;
+        } else if(!bot.target || notDeadPlayers.indexOf(bot.target) === -1 || (bot.lastTargetUpdate || 0) > TARGET_UPDATE_TIME) {
+            bot.target = notDeadPlayers[utils.getRandomInt(notDeadPlayers.length - 1)]
+        }
+        if(bot.target) {
             var botCoords = getObjectCoordinates(bot.positionInfo),
-                targetCoords = getObjectCoordinates(target.positionInfo);
+                targetCoords = getObjectCoordinates(bot.target.positionInfo);
+            bot.lastTargetUpdate = utils.getNowTime();
             tryDoShot(room.id, bot, botCoords, targetCoords);
             if(now - (bot.ensurePathTime || 0) / 1000 > 1) {
                 var path = findPathToTarget(map, botCoords, targetCoords),
