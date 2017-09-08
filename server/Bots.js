@@ -14,6 +14,9 @@ function processBotsMoves(room) {
             y: Math.trunc(obj.y / map.tileSize)
         }
     };
+    if(!room.players.length) {
+        return;
+    }
 
     var map = room.map,
         now = utils.getNowTime();
@@ -42,11 +45,11 @@ function processBotsMoves(room) {
             } else {
                 bot.positionInfo.direction = '';
             }
+        } else {
+            bot.positionInfo.direction = '';
         }
         bot.ensurePathTime = now;
         bot.botLastUpdateTime = now;
-
-
     });
 };
 
@@ -95,9 +98,6 @@ function findPathToTarget(map, startCoord, targetCoord) {
             forEachShift(c, (x, y, code) => {
                 if(cellCache[code] === undefined && x >= minPoint && y >= minPoint && x <= minPoint + map.dimension.x && y <= minPoint + map.dimension.y) {
                     var isWall = map.wallCache[code];
-                    if(isWall) {
-                        var b = 5;
-                    }
                     !isWall && newCellArr.push({x: x, y: y});
                     cellCache[code] = isWall ? -1 : cellCache[getCoordCode({x: c.x, y: c.y})] + 1;
                 }

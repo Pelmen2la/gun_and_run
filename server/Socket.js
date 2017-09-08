@@ -42,6 +42,7 @@ function onSocketJoinGame(data) {
         player = players.find((p) => p.id == playerId),
         exceptRoomId = player && player.isDead ? player.roomId : null;
     score[playerId] = score[playerId] || 0;
+    player && tryRemovePlayerFromCurrentRoom(player);
     findRoomForPlayer(playerId, exceptRoomId, function(room) {
         var joinGameFn = () => {
                 if(players.indexOf(player) === -1) {
@@ -54,7 +55,6 @@ function onSocketJoinGame(data) {
             position = dataHelper.getPlayerSpawnPosition(room.map);
 
         if(player) {
-            removePlayerFromCurrentRoom(player);
             if(player.isDead) {
                 dataHelper.extendPlayerWithNewGameData(player, position, socket.id);
             }
@@ -70,14 +70,12 @@ function onSocketJoinGame(data) {
 };
 
 function findRoomForPlayer(playerId, exceptRoomId, callback) {
-    var room = rooms.find((r) => r.playersCache[playerId]);
-    if(room && !exceptRoomId) {
+    var room = rooms.find((r) => r.playersCache[playerId] && r.id != exceptRoomId);
+    if(room) {
         callback(room);
     } else {
         var roomCandidates = rooms.filter(function(r) {
-            var playersCount = 0;
-            utils.forEachEntryInObject(r.playersCache, () => playersCount++);
-            return r.id !== exceptRoomId && playersCount < ROOM_MAX_PLAYERS_COUNT;
+            return r.id !== exceptRoomId && r.players.length < ROOM_MAX_PLAYERS_COUNT;
         });
         if(roomCandidates.length) {
             callback(roomCandidates[utils.getRandomInt(roomCandidates.length - 1)]);
@@ -97,7 +95,8 @@ function addNewRoom(callback) {
 }
 
 function ensureEmptyRoomAvailable() {
-    if(!rooms.filter((r) => !r.players.length).length) {
+    var emptyRooms = rooms.filter((r) => !r.players.length);
+    if(!emptyRooms.length) {
         addNewRoom();
     }
 };
@@ -108,8 +107,6 @@ function onSocketPlayerInfo(data) {
     if(player) {
         player.positionInfo = data.positionInfo;
         player.lastUpdateTime = utils.getNowTime();
-    } else {
-        this.emit('death');
     }
 };
 
@@ -123,15 +120,15 @@ function onSocketHit(data) {
         bullet.hitsCounter[target.id] = (bullet.hitsCounter[target.id] || 0) + 1;
         processPlayerDamage(target, bullet.damage);
         if(target.endurance.hp <= 0) {
-            score[owner.id] = (score[owner.id] || 0) + 1;
             if(target.isBot) {
                 respawnBot(target, room.map);
             } else {
                 target.isDead = true;
                 targetSocket.emit('death');
             }
-            if(score[owner.id] >= SCORES_TO_WIN) {
-                endRound();
+            if(!owner.isBot) {
+                score[owner.id] = (score[owner.id] || 0) + 1;
+                score[owner.id] >= SCORES_TO_WIN && endRound();
             }
         } else {
             !target.isBot && targetSocket.emit('enduranceInfo', target.endurance);
@@ -234,8 +231,8 @@ function onSocketPortal(data) {
         currentRoom = getRoomBySocketData(data),
         player = getPlayerBySocketData(data);
     if(currentRoom && player) {
+        tryRemovePlayerFromCurrentRoom(player);
         findRoomForPlayer(player.id, currentRoom.id, function(newRoom) {
-            removePlayerFromCurrentRoom(currentRoom, socket, player);
             addPlayerToRoom(newRoom, socket, player);
             utils.extendObject(player.positionInfo, dataHelper.getPlayerSpawnPosition(newRoom.map));
             socket.emit('joinRoomData', getJoinRoomData(newRoom, player));
@@ -328,15 +325,18 @@ function addPlayerToRoom(room, socket, player) {
     player.roomId = room.id;
 };
 
-function removePlayerFromCurrentRoom(player) {
-    var room = roomsCache[player.roomId],
+function tryRemovePlayerFromCurrentRoom(player) {
+    var room = rooms.find((r) => !!r.players.find((p) => p.id === player.id));
         socket = io.sockets.connected[player.socketId];
     socket && socket.leave(room.id);
-    room && delete room.playersCache[player.id];
+    if(room) {
+        delete room.playersCache[player.id];
+        room.players.splice(room.players.indexOf(player), 1);
+    }
 };
 
 function kickPlayer(player) {
-    removePlayerFromCurrentRoom(player);
+    tryRemovePlayerFromCurrentRoom(player);
     players.splice(players.indexOf(player), 1);
 };
 
