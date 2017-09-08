@@ -21,11 +21,11 @@
 
     rd.forEach(function(r) {
         var playersHtml = '';
-        for(var key in r.players) {
+        for(var key in r.playersCache) {
             var playersCount = 0;
-            if(r.players.hasOwnProperty(key)) {
-                var p = r.players[key];
-                playersHtml += [p.id, p.name, p.isBot, p.positionInfo.x, p.positionInfo.y].map(getTd).join('');
+            if(r.playersCache.hasOwnProperty(key)) {
+                var p = r.playersCache[key];
+                playersHtml += '<tr>' + [p.id, p.name, !!p.isBot, p.positionInfo.x, p.positionInfo.y].map(getTd).join('') + '</tr>';
                 playersCount++;
             }
             html += '<div class="room-block">' +
@@ -43,6 +43,9 @@
     .room-block table td,
     .room-block table th {
         padding: 10px;
+    }
+    .room-block {
+        margin-bottom: 30px;
     }
 </style>
 
