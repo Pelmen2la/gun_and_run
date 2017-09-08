@@ -2,6 +2,7 @@ var fs = require('fs'),
     path = require('path'),
     MobileDetect = require('mobile-detect'),
     dataHelper = require('./../DataHelper'),
+    socket = require('./../Socket'),
     characterNames = [],
     landscapeProperties = {};
 
@@ -26,6 +27,13 @@ module.exports = function(app) {
     app.get('/player/:id/', function(req, res) {
         dataHelper.getPlayer(req.params.id, function(data) {
             res.send(data);
+        });
+    });
+
+    app.get('/debug/', function(req, res) {
+        fs.readFile(path.join(global.appRoot, '/static/html/debug.html'), 'utf8', function(err, debugPageHtml) {
+            debugPageHtml = debugPageHtml.replace('{{ROOMS_DATA}}', JSON.stringify(socket.getRooms()));
+            res.send(debugPageHtml);
         });
     });
 };

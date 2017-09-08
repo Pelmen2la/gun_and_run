@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<div id="MainContainer">
+</div>
+
+<script type="text/javascript">
+    window.roomsData = JSON.parse('{{ROOMS_DATA}}');
+    var rd = window.roomsData;
+
+    var mainCont = document.getElementById('MainContainer'),
+            html = '';
+
+    function getTd(innerHtml) {
+        return '<td>' + innerHtml + '</td>';
+    }
+
+    rd.forEach(function(r) {
+        var playersHtml = '';
+        for(var key in r.players) {
+            var playersCount = 0;
+            if(r.players.hasOwnProperty(key)) {
+                var p = r.players[key];
+                playersHtml += [p.id, p.name, p.isBot, p.positionInfo.x, p.positionInfo.y].map(getTd).join('');
+                playersCount++;
+            }
+            html += '<div class="room-block">' +
+                        '<div class="room-info">' + '<b>id</b> ' + r.id + ' <b>Players count</b> ' + playersCount + '</div>' +
+                        '<table><tr><th>ID</th><th>Name</th><th>isBot</th><th>X</th><th>Y</th></tr>' +
+                            playersHtml +
+                        '</table>' +
+                    '</div>';
+        }
+        mainCont.innerHTML = html;
+    });
+</script>
+
+<style type="text/css">
+    .room-block table td,
+    .room-block table th {
+        padding: 10px;
+    }
+</style>
+
+</body>
+</html>

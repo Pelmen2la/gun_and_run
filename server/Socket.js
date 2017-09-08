@@ -341,7 +341,12 @@ function kickPlayer(player) {
     players.splice(players.indexOf(player), 1);
 };
 
+function getRooms() {
+    return rooms;
+};
+
 module.exports = {
+    getRooms: getRooms,
     onSocketShot: onSocketShot,
     init: init
 };
