@@ -220,7 +220,7 @@ function getPlayerSpawnPosition(map) {
 };
 
 function getRandomDimension() {
-    return Math.round(30 + 20 * Math.random());
+    return Math.round(20 + 10 * Math.random());
 };
 
 module.exports = {

@@ -27,7 +27,14 @@ function drawMap(mapData) {
     portal = spritesFactory.createAnimatedObject({ x: mapData.portal.x, y: mapData.portal.y }, 'greenportal', 8, 5);
 
     var worldWidth = borderW * 2 + mapData.tileSize * mapData.dimension.x,
-        worldHeight = borderW * 2 + mapData.tileSize * mapData.dimension.y;
+        worldHeight = borderW * 2 + mapData.tileSize * mapData.dimension.y,
+        screenWidth = Math.min(worldWidth, window.innerWidth),
+        screenHeight= Math.min(worldHeight, window.innerHeight),
+        mainContainer = document.getElementById('MainContainer');
+
+    game.instance.scale.setGameSize(screenWidth, screenHeight);
+    mainContainer.style.width = screenWidth + 'px';
+    mainContainer.style.height = screenHeight + 'px';
 
     [[0, 0, worldWidth, borderW], [0, 0, borderW, worldHeight], [worldWidth - borderW, 0, borderW, worldHeight],
         [0, worldHeight - borderW, worldWidth, borderW]].forEach(function(params) {

@@ -14,8 +14,8 @@ import weapons from './../../server/Weapons.js'
 
 
 var gameData = {},
-    game = new Phaser.Game(window.innerWidth, window.innerHeight,
-        Phaser.AUTO, '', {
+    game = new Phaser.Game('100%', '100%',
+        Phaser.AUTO, document.getElementById('MainContainer'), {
             preload: preload,
             create: create,
             update: update
@@ -98,12 +98,13 @@ function checkCollision() {
 };
 
 function initGameData(data) {
+    var gameMap = data.map;
     game.world.removeAll();
-    map.drawMap(data.map);
+    map.drawMap(gameMap);
     controls.init(getControlsHandlers());
     var player = spritesFactory.createPlayer(data.player);
     gameData = {
-        map: data.map,
+        map: gameMap,
         player: player,
         players: {},
         playersGroup: game.add.group(),
