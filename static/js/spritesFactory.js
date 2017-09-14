@@ -7,7 +7,7 @@ import jointCode from './../../server/JointCode.js'
 const flamethrowerFlameSizes = [[8, 11], [10, 13], [16, 16], [32, 32]],
     getSpriteAnimProps = jointCode.getSpriteAnimProps;
 
-var characterPointer;
+var characterCircle;
 
 function loadResources() {
     var load = game.instance.load.spritesheet.bind(game.instance.load);
@@ -17,7 +17,7 @@ function loadResources() {
     load('wall', consts.TILES_PATH + 'wall.png', 32, 32);
     load('blank', consts.TILES_PATH + 'blank.png', 1, 1);
     load('greenportal', consts.SPRITES_PATH +'portals/green.png', 33, 52);
-    load('character_pointer', consts.TILES_PATH +'character_pointer.png', 25, 24);
+    load('character_circle', consts.TILES_PATH +'character_circle.png', 25, 24);
 
     window.characterNames.forEach((n) => load(n, utils.stringFormat('{0}{1}/{2}.png', consts.SPRITES_PATH,  'characters', n), 27, 32));
 
@@ -74,10 +74,10 @@ function getSprite(name, x, y, dontCollide) {
     return sprite;
 };
 
-function createCharacterPointer() {
-    characterPointer && characterPointer.kill();
-    characterPointer = getSprite('character_pointer', 0, 0, true);
-    characterPointer.anchor.y = 3;
+function createCharacterCircle() {
+    characterCircle && characterCircle.kill();
+    characterCircle = getSprite('character_circle', 0, 0, true);
+    characterCircle.anchor.y = -0.25;
 };
 
 function hideSprite(sprite, hideTime) {
@@ -89,7 +89,7 @@ function hideSprite(sprite, hideTime) {
     }, hideTime);
 };
 
-function createPlayer(data) {
+function createPlayer(data, addCircle) {
     var pos = data.positionInfo,
         player = getSprite(data.characterName, pos.x, pos.y);
     player.data = {
@@ -107,6 +107,7 @@ function createPlayer(data) {
     player.animations.add('right', [16, 17, 18, 19], 10, true);
     player.animations.add('downright', [8, 9, 10, 11], 10, true);
     player.animations.add('down', [12, 13, 14, 15], 10, true);
+    addCircle && createCharacterCircle();
 
     return player;
 };
@@ -140,7 +141,7 @@ function createWeaponItem(data) {
     return createItem(data, data.name, 8, 5);
 };
 
-function updatePlayerSprite(player, moveDirection, isMainPlayer) {
+function updatePlayerSprite(player, moveDirection, ensureCirclePosition) {
     if(moveDirection) {
         var animProps = getSpriteAnimProps(moveDirection),
             vX = animProps.vX,
@@ -154,12 +155,12 @@ function updatePlayerSprite(player, moveDirection, isMainPlayer) {
         player.body.velocity.y = 0;
         player.animations.stop();
     }
-    if(isMainPlayer) {
-        characterPointer.x = player.x;
-        characterPointer.y = player.y;
-        characterPointer.z = player.z - 1;
-        characterPointer.body.velocity.x = player.body.velocity.x;
-        characterPointer.body.velocity.y = player.body.velocity.y;
+    if(ensureCirclePosition) {
+        characterCircle.x = player.x;
+        characterCircle.y = player.y;
+        characterCircle.z = player.z - 1;
+        characterCircle.body.velocity.x = player.body.velocity.x;
+        characterCircle.body.velocity.y = player.body.velocity.y;
     }
     updatePlayerDirections(player, moveDirection);
 };
@@ -232,7 +233,6 @@ export default {
     createPlayer: createPlayer,
     updatePlayerSprite: updatePlayerSprite,
     updatePlayerDirections: updatePlayerDirections,
-    createCharacterPointer: createCharacterPointer,
     createBullet: createBullet,
     createFlamethrowerFlame: createFlamethrowerFlame,
     createEnduranceItem: createEnduranceItem,

@@ -101,9 +101,8 @@ function initGameData(data) {
     var gameMap = data.map;
     game.world.removeAll();
     map.drawMap(gameMap);
-    spritesFactory.createCharacterPointer();
     controls.init(getControlsHandlers());
-    var player = spritesFactory.createPlayer(data.player);
+    var player = spritesFactory.createPlayer(data.player, true);
     gameData = {
         map: gameMap,
         player: player,
