@@ -21,10 +21,9 @@ var gameData = {},
             update: update
         });
 
-game.time.desiredFps = 40;
-game.forceSingleUpdate = true;
-
 function preload() {
+    game.time.desiredFps = 40;
+    game.forceSingleUpdate = true;
     spritesFactory.loadResources();
     audio.loadResources();
 };
