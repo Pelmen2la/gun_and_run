@@ -101,6 +101,7 @@ function initGameData(data) {
     var gameMap = data.map;
     game.world.removeAll();
     map.drawMap(gameMap);
+    spritesFactory.createCharacterPointer();
     controls.init(getControlsHandlers());
     var player = spritesFactory.createPlayer(data.player);
     gameData = {
@@ -325,7 +326,7 @@ function updatePlayerPosition() {
     game.physics.arcade.collide(player, map.getWallGroup());
     body.velocity = {x: 0, y: 0};
 
-    spritesFactory.updatePlayerSprite(player, moveDirection);
+    spritesFactory.updatePlayerSprite(player, moveDirection, true);
 };
 
 function updateOtherPlayersPosition(playersData) {

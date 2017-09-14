@@ -7,6 +7,8 @@ import jointCode from './../../server/JointCode.js'
 const flamethrowerFlameSizes = [[8, 11], [10, 13], [16, 16], [32, 32]],
     getSpriteAnimProps = jointCode.getSpriteAnimProps;
 
+var characterPointer;
+
 function loadResources() {
     var load = game.instance.load.spritesheet.bind(game.instance.load);
     load('hp', consts.SPRITES_PATH +'items/hp.png', 32, 32);
@@ -15,6 +17,7 @@ function loadResources() {
     load('wall', consts.TILES_PATH + 'wall.png', 32, 32);
     load('blank', consts.TILES_PATH + 'blank.png', 1, 1);
     load('greenportal', consts.SPRITES_PATH +'portals/green.png', 33, 52);
+    load('character_pointer', consts.TILES_PATH +'character_pointer.png', 25, 24);
 
     window.characterNames.forEach((n) => load(n, utils.stringFormat('{0}{1}/{2}.png', consts.SPRITES_PATH,  'characters', n), 27, 32));
 
@@ -61,14 +64,20 @@ function getLandscapeTileUrl(landscapeType, tileType, index) {
     return utils.stringFormat('{0}{1}/{2}{3}.png', consts.LANDSCAPE_TILES_FOLDER_PATH, landscapeType, tileType, index);
 };
 
-function getSprite(name, x, y) {
+function getSprite(name, x, y, dontCollide) {
     var sprite = game.instance.add.sprite(x, y, name);
     game.instance.physics.arcade.enable(sprite);
     sprite.anchor = {x: 0.5, y: 0.5};
-    sprite.body.collideWorldBounds = true;
+    sprite.body.collideWorldBounds = !dontCollide;
     sprite.body.gravity.y = 0;
     sprite.body.bounce = [0, 0];
     return sprite;
+};
+
+function createCharacterPointer() {
+    characterPointer && characterPointer.kill();
+    characterPointer = getSprite('character_pointer', 0, 0, true);
+    characterPointer.anchor.y = 3;
 };
 
 function hideSprite(sprite, hideTime) {
@@ -131,7 +140,7 @@ function createWeaponItem(data) {
     return createItem(data, data.name, 8, 5);
 };
 
-function updatePlayerSprite(player, moveDirection) {
+function updatePlayerSprite(player, moveDirection, isMainPlayer) {
     if(moveDirection) {
         var animProps = getSpriteAnimProps(moveDirection),
             vX = animProps.vX,
@@ -144,6 +153,13 @@ function updatePlayerSprite(player, moveDirection) {
         player.body.velocity.x = 0;
         player.body.velocity.y = 0;
         player.animations.stop();
+    }
+    if(isMainPlayer) {
+        characterPointer.x = player.x;
+        characterPointer.y = player.y;
+        characterPointer.z = player.z - 1;
+        characterPointer.body.velocity.x = player.body.velocity.x;
+        characterPointer.body.velocity.y = player.body.velocity.y;
     }
     updatePlayerDirections(player, moveDirection);
 };
@@ -216,6 +232,7 @@ export default {
     createPlayer: createPlayer,
     updatePlayerSprite: updatePlayerSprite,
     updatePlayerDirections: updatePlayerDirections,
+    createCharacterPointer: createCharacterPointer,
     createBullet: createBullet,
     createFlamethrowerFlame: createFlamethrowerFlame,
     createEnduranceItem: createEnduranceItem,
