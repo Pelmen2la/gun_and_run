@@ -1,14 +1,15 @@
 var utils = require('./Utils'),
     consts = require('../static/js/consts.js'),
-    jointCode = require('./JointCode.js'),
-    weapons = require('./Weapons.js'),
-    dataHelper = require('./DataHelper');
+    jointCode = require('./JointCode'),
+    weapons = require('./Weapons');
 
-const TARGET_UPDATE_TIME = 4000;
+const TARGET_UPDATE_TIME = 3000;
 
 function processBotsMoves(room) {
+    var dataHelper = require('./DataHelper');
+
     function getDistance(obj0, obj1) {
-        return Math.sqrt(Math.pow(obj0.x - obj1.x, 2), Math.pow(obj0.y - obj1.y, 2));
+        return Math.sqrt(Math.pow(obj0.x - obj1.x, 2) + Math.pow(obj0.y - obj1.y, 2));
     };
     function getObjectCoordinates(obj) {
         return {
@@ -23,23 +24,27 @@ function processBotsMoves(room) {
         var timeDiff = (now - bot.botLastUpdateTime) / 1000,
             animProps = jointCode.getSpriteAnimProps(bot.positionInfo.direction);
 
-        bot.positionInfo.x += consts.PLAYER_VELOCITY * animProps.vX * timeDiff;
-        bot.positionInfo.y += consts.PLAYER_VELOCITY * animProps.vY * timeDiff;
+        bot.positionInfo.x += consts.PLAYER_VELOCITY * 0.8 * animProps.vX * timeDiff;
+        bot.positionInfo.y += consts.PLAYER_VELOCITY * 0.8 *animProps.vY * timeDiff;
 
-        var notDeadPlayers = room.players.filter((p) => !p.isDead);
+        var notDeadPlayers = room.players.filter((p) => !p.isDead),
+            botCoords = getObjectCoordinates(bot.positionInfo);
         if(notDeadPlayers.length === 0) {
-            bot.target = null;
-        } else if(!bot.target || notDeadPlayers.indexOf(bot.target) === -1 || (bot.lastTargetUpdate || 0) > TARGET_UPDATE_TIME) {
-            bot.target = notDeadPlayers[utils.getRandomInt(notDeadPlayers.length - 1)]
+            bot.targetCoords = null;
+        } else if(!bot.targetCoords || (bot.lastTargetUpdate || 0) > TARGET_UPDATE_TIME) {
+            var targetPlayerCoords = getObjectCoordinates(utils.getRandomArrayMember(notDeadPlayers).positionInfo);
+            bot.targetCoords = targetPlayerCoords;
+            if(getDistance(bot.targetCoords, botCoords) < 4) {
+                bot.targetCoords = getObjectCoordinates(dataHelper.getMapRandomGroundTile(map));
+            }
         }
-        if(bot.target) {
-            var botCoords = getObjectCoordinates(bot.positionInfo),
-                targetCoords = getObjectCoordinates(bot.target.positionInfo);
+        if(bot.targetCoords) {
             bot.lastTargetUpdate = utils.getNowTime();
-            //tryDoShot(room.id, bot, botCoords, targetCoords);
+            tryDoShot(room.id, bot, botCoords, targetPlayerCoords);
             if(now - (bot.ensurePathTime || 0) / 1000 > 1) {
-                var path = findPathToTarget(map, botCoords, targetCoords),
-                    direction = path.length >= 4 ? getDirectionByCoords(botCoords, path[path.length - 1]) : '';
+                var path = findPathToTarget(map, botCoords, bot.targetCoords),
+                    nextCoords = path[path.length - 1],
+                    direction = getDirectionByCoords(botCoords, nextCoords);
                 bot.positionInfo.direction = direction;
                 bot.positionInfo.lookDirection = direction || bot.positionInfo.lookDirection || '';
             } else {
@@ -54,9 +59,9 @@ function processBotsMoves(room) {
 };
 
 function tryDoShot(roomId, bot, botCoords, targetCoords) {
-    var weaponsToShoot = bot.weapons.filter((w) => weapons.isWeaponCanShoot(w, 0));
+    var weaponsToShoot = bot.weapons.filter((w) => weapons.isWeaponCanShoot(w, 200));
     if(weaponsToShoot.length > 0) {
-        var weapon = weaponsToShoot[utils.getRandomInt(weaponsToShoot.length - 1)];
+        var weapon = utils.getRandomArrayMember(weaponsToShoot);
         require('./Socket.js').onSocketShot({
             weaponName: weapon.name,
             bulletId: utils.getUid(),

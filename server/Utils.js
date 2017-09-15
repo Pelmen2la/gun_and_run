@@ -19,6 +19,12 @@ function getRandomInt(max, min) {
     return min + Math.round((max - min) * Math.random());
 };
 
+function getRandomArrayMember(arr) {
+    return arr[getRandomInt(arr.length - 1)];
+};
+
+
+
 function flipCoin() {
     return Math.random() < 0.5;
 };
@@ -59,7 +65,7 @@ function createRequest(url, method, data, callback) {
     xhr.open(method, url, true);
     data && xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4 && xhr.status == 200) {
+        if(xhr.readyState == 4 && xFhr.status == 200) {
             callback(JSON.parse(xhr.responseText));
         }
     };
@@ -70,6 +76,7 @@ module.exports = {
     getUid: getUid,
     getGuid: getGuid,
     getRandomInt: getRandomInt,
+    getRandomArrayMember: getRandomArrayMember,
     flipCoin: flipCoin,
     getNowTime: getNowTime,
     forEachEntryInObject: forEachEntryInObject,

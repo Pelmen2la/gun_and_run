@@ -78,7 +78,7 @@ function findRoomForPlayer(playerId, exceptRoomId, callback) {
             return r.id !== exceptRoomId && r.players.length < ROOM_MAX_PLAYERS_COUNT;
         });
         if(roomCandidates.length) {
-            callback(roomCandidates[utils.getRandomInt(roomCandidates.length - 1)]);
+            callback(utils.getRandomArrayMember(roomCandidates));
         } else {
             addNewRoom(callback);
         }

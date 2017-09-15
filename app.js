@@ -16,7 +16,7 @@ server.listen(process.env.PORT || 3103, process.env.HOST || 'localhost', functio
 
 require('./server/config/index')(app);
 require('./server/routes/index')(app);
-require('./server/Socket').init(server);
+require('./server/config/globalresources')(() => require('./server/Socket').init(server));
 
 process.on('uncaughtException', function(err) {
     console.error(err);

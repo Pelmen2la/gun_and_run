@@ -82,7 +82,7 @@ function createNewRoom(callback) {
     };
     getNewMap(function(mapData) {
         room.map = mapData;
-        var bot = getNewPlayer(getPlayerSpawnPosition(room.map), null, '', 'alex', true);
+        var bot = getNewPlayer(getPlayerSpawnPosition(room.map), null, '', utils.getRandomArrayMember(global.characterNames), true);
         bot.botLastUpdateTime = utils.getNowTime();
         room.playersCache[bot.id] = bot;
         room.bots.push(bot);
@@ -166,7 +166,7 @@ function getNewMap(callback) {
                 enduranceItems.push(item);
             } else {
                 var weaponsArr = weapons.getNotStandardWeapons(),
-                    randomWeapon = weaponsArr[utils.getRandomInt(weaponsArr.length - 1)];
+                    randomWeapon = utils.getRandomArrayMember(weaponsArr);
                 item.name = randomWeapon.name;
                 item.respawnTime = 10000;
                 weaponItems.push(item);
@@ -183,7 +183,7 @@ function getNewMap(callback) {
         var map = Map({
             id: utils.getUid(),
             date: new Date(),
-            landscapeType: landscapeTypes[utils.getRandomInt(landscapeTypes.length - 1)],
+            landscapeType: utils.getRandomArrayMember(landscapeTypes),
             tileSize: tileSize,
             bordersWidth: bordersWidth,
             dimension: {
@@ -211,12 +211,16 @@ function getNewMap(callback) {
     }
 };
 
-function getPlayerSpawnPosition(map) {
+function getMapRandomGroundTile(map) {
     var groundTiles = map.tiles.filter(function(tile) {
-            return tile.tileType === 'ground';
-        }),
-        playerStartTile = groundTiles[utils.getRandomInt(groundTiles.length - 1)];
-    return {x: playerStartTile.x + map.tileSize / 2, y: playerStartTile.y + map.tileSize / 2};
+        return tile.tileType === 'ground';
+    });
+    return utils.getRandomArrayMember(groundTiles);
+};
+
+function getPlayerSpawnPosition(map) {
+    var startTile = getMapRandomGroundTile(map);
+    return {x: startTile.x + map.tileSize / 2, y: startTile.y + map.tileSize / 2};
 };
 
 function getRandomDimension() {
@@ -225,6 +229,7 @@ function getRandomDimension() {
 
 module.exports = {
     getNewMap: getNewMap,
+    getMapRandomGroundTile: getMapRandomGroundTile,
     getNewPlayer: getNewPlayer,
     createNewRoom: createNewRoom,
     extendPlayerWithNewGameData: extendPlayerWithNewGameData,

@@ -10,10 +10,8 @@
 
 <script type="text/javascript">
     window.roomsData = JSON.parse('{{ROOMS_DATA}}');
-    var rd = window.roomsData;
-
-    var mainCont = document.getElementById('MainContainer'),
-            html = '';
+    var rd = window.roomsData,mainCont = document.getElementById('MainContainer'),
+        html = '';
 
     function getTd(innerHtml) {
         return '<td>' + innerHtml + '</td>';
@@ -28,13 +26,13 @@
                 playersHtml += '<tr>' + [p.id, p.name, !!p.isBot, p.positionInfo.x, p.positionInfo.y].map(getTd).join('') + '</tr>';
                 playersCount++;
             }
-            html += '<div class="room-block">' +
-                        '<div class="room-info">' + '<b>id</b> ' + r.id + ' <b>Players count</b> ' + playersCount + '</div>' +
-                        '<table><tr><th>ID</th><th>Name</th><th>isBot</th><th>X</th><th>Y</th></tr>' +
-                            playersHtml +
-                        '</table>' +
-                    '</div>';
         }
+        html += '<div class="room-block">' +
+            '<div class="room-info">' + '<b>id</b> ' + r.id + ' <b>Players count</b> ' + playersCount + '</div>' +
+            '<table><tr><th>ID</th><th>Name</th><th>isBot</th><th>X</th><th>Y</th></tr>' +
+            playersHtml +
+            '</table>' +
+            '</div>';
         mainCont.innerHTML = html;
     });
 </script>
