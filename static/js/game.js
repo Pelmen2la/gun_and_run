@@ -150,9 +150,14 @@ function onPortalButtonDown() {
     }
 };
 
-function onChangeWeaponButtonDown() {
-    var weaponIndex = gameData.player.data.selectedWeaponIndex + 1;
-    setPlayerSelectedWeapon(gameData.player.data.weapons[weaponIndex] ? weaponIndex : 0);
+function onChangeWeaponButtonDown(isNext) {
+    var weaponIndex = gameData.player.data.selectedWeaponIndex + (isNext ? 1 : -1);
+    if(weaponIndex < 0) {
+        gameData.player.data.weapons.length - 1
+    }  else if(weaponIndex > gameData.player.data.weapons.length - 1) {
+        weaponIndex = 0;
+    }
+    setPlayerSelectedWeapon(weaponIndex);
 };
 
 function shot(weaponName) {

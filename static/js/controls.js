@@ -17,7 +17,8 @@ function initKeyboard(handlers) {
     cursors = keyboard.createCursorKeys();
     keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = prepareHandler(handlers.onShotButtonPress);
     keyboard.addKey(Phaser.Keyboard.R).processKeyDown = prepareHandler(handlers.onPortalButtonDown);
-    keyboard.addKey(Phaser.Keyboard.Z).processKeyDown = prepareHandler(handlers.onChangeWeaponButtonDown);
+    keyboard.addKey(Phaser.Keyboard.E).processKeyDown = prepareHandler(handlers.onChangeWeaponButtonDown, [true]);
+    keyboard.addKey(Phaser.Keyboard.Q).processKeyDown = prepareHandler(handlers.onChangeWeaponButtonDown, [false]);
     wKey = keyboard.addKey(Phaser.Keyboard.W);
     dKey = keyboard.addKey(Phaser.Keyboard.D);
     sKey = keyboard.addKey(Phaser.Keyboard.S);
@@ -28,16 +29,16 @@ function initTouchControls(handlers) {
     initMobileStick();
     initMobileShotButton(prepareHandler(handlers.onShotButtonPress));
     touch(document.getElementById('PortalIcon')).on('start', prepareHandler(handlers.onPortalButtonDown));
-    touch(document.getElementById('PlayerWeaponIcon')).on('start', prepareHandler(handlers.onChangeWeaponButtonDown));
+    touch(document.getElementById('PlayerWeaponIcon')).on('start', prepareHandler(handlers.onChangeWeaponButtonDown, [true]));
 };
 
 function setControlsEnabled(enabled) {
     isControlsEnabled = enabled;
 };
 
-function prepareHandler(handler) {
+function prepareHandler(handler, args) {
     return function() {
-        isControlsEnabled && handler();
+        isControlsEnabled && handler.apply(this, args);
     };
 };
 

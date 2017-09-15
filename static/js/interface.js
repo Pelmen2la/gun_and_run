@@ -141,7 +141,8 @@ function updatePlayerWeaponPanel(selectedWeaponData, showChangeWeaponTooltipIcon
     var panel = gbId('PlayerWeaponBar');
     panel.querySelector('img').src = utils.stringFormat('{0}{1}.png', consts.WEAPONS_ICONS_PATH, selectedWeaponData.name);
     panel.querySelector('.numbers').innerHTML = selectedWeaponData.ammo == null ? '' : getNumberHtml(selectedWeaponData.ammo);
-    setDomElementVisibility(gbId('ChangeWeaponTooltipIcon'), showChangeWeaponTooltipIcon);
+    setDomElementVisibility(gbId('PrevWeaponIcon'), showChangeWeaponTooltipIcon);
+    setDomElementVisibility(gbId('NextWeaponIcon'), showChangeWeaponTooltipIcon);
 };
 
 function updatePlayerArmorPanel(armorCount) {

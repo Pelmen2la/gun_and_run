@@ -36,7 +36,7 @@ function processBotsMoves(room) {
             var botCoords = getObjectCoordinates(bot.positionInfo),
                 targetCoords = getObjectCoordinates(bot.target.positionInfo);
             bot.lastTargetUpdate = utils.getNowTime();
-            tryDoShot(room.id, bot, botCoords, targetCoords);
+            //tryDoShot(room.id, bot, botCoords, targetCoords);
             if(now - (bot.ensurePathTime || 0) / 1000 > 1) {
                 var path = findPathToTarget(map, botCoords, targetCoords),
                     direction = path.length >= 4 ? getDirectionByCoords(botCoords, path[path.length - 1]) : '';
