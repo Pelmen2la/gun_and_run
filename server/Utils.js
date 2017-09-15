@@ -65,7 +65,7 @@ function createRequest(url, method, data, callback) {
     xhr.open(method, url, true);
     data && xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
     xhr.onreadystatechange = function() {
-        if(xhr.readyState == 4 && xFhr.status == 200) {
+        if(xhr.readyState == 4 && xhr.status == 200) {
             callback(JSON.parse(xhr.responseText));
         }
     };
