@@ -24,8 +24,8 @@ function processBotsMoves(room) {
         var timeDiff = (now - bot.botLastUpdateTime) / 1000,
             animProps = jointCode.getSpriteAnimProps(bot.positionInfo.direction);
 
-        bot.positionInfo.x += consts.PLAYER_VELOCITY * 0.8 * animProps.vX * timeDiff;
-        bot.positionInfo.y += consts.PLAYER_VELOCITY * 0.8 *animProps.vY * timeDiff;
+        bot.positionInfo.x += consts.PLAYER_VELOCITY * 0.9 * animProps.vX * timeDiff;
+        bot.positionInfo.y += consts.PLAYER_VELOCITY * 0.9 *animProps.vY * timeDiff;
 
         var notDeadPlayers = room.players.filter((p) => !p.isDead),
             botCoords = getObjectCoordinates(bot.positionInfo);

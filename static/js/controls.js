@@ -8,8 +8,7 @@ var cursors = {},
     wKey, dKey, sKey, aKey;
 
 function init(handlers) {
-    initKeyboard(handlers);
-    initTouchControls(handlers);
+    document.documentElement.className.indexOf('mobile') > -1 ? initTouchControls(handlers) : initKeyboard(handlers);
 };
 
 function initKeyboard(handlers) {
@@ -29,7 +28,8 @@ function initTouchControls(handlers) {
     initMobileStick();
     initMobileShotButton(prepareHandler(handlers.onShotButtonPress));
     touch(document.getElementById('PortalIcon')).on('start', prepareHandler(handlers.onPortalButtonDown));
-    touch(document.getElementById('PlayerWeaponIcon')).on('start', prepareHandler(handlers.onChangeWeaponButtonDown, [true]));
+    touch(document.getElementById('PrevWeaponIcon')).on('start', prepareHandler(handlers.onChangeWeaponButtonDown, [false]));
+    touch(document.getElementById('NextWeaponIcon')).on('start', prepareHandler(handlers.onChangeWeaponButtonDown, [true]));
 };
 
 function setControlsEnabled(enabled) {

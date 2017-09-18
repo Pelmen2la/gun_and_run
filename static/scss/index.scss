@@ -157,15 +157,6 @@ body {
         background-repeat: no-repeat;
     }
 
-    .mobile .portal-icon {
-        bottom: 27%;
-        right: 20px;
-        width: 29px;
-        height: 45px;
-        background-image: url('/images/icons/portal_mobile.png');
-        z-index: 5;
-    }
-
     .weapons-tooltip-container {
         text-align: center;
         * {
@@ -174,8 +165,17 @@ body {
         .numbers {
             margin: 0 5px;
         }
+        .prev-weapon-tooltip-icon,
+        .next-weapon-tooltip-icon {
+            width: 8px;
+            height: 14px;
+        }
         .prev-weapon-tooltip-icon {
-            padding-bottom: 1px;
+            background: url('/images/icons/letters/q.png') no-repeat;
+        }
+        .next-weapon-tooltip-icon {
+            margin-bottom: -1px;
+            background: url('/images/icons/letters/e.png') no-repeat;
         }
     }
 
@@ -184,9 +184,6 @@ body {
     }
 
     .mobile-interface-container {
-        position: absolute;
-        width: 100%;
-        height: 100%;
         display: none;
 
         .mobile-control-stick {
@@ -248,12 +245,33 @@ body {
             top: calc(50% - 1em);
         }
     }
+}
 
-    .end-round-screen {
-
+html.mobile {
+    .mobile-interface-container {
+        display: block;
     }
 
-    html.mobile .mobile-interface-container {
-        display: block;
+    .portal-icon {
+        bottom: 27%;
+        right: 20px;
+        width: 29px;
+        height: 45px;
+        background-image: url('/images/icons/portal_mobile.png');
+        z-index: 5;
+    }
+
+    .weapons-tooltip-container {
+        .prev-weapon-tooltip-icon,
+        .next-weapon-tooltip-icon {
+            width: 8px;
+            height: 13px;
+        }
+        .prev-weapon-tooltip-icon {
+            background: url('/images/icons/leftarrow.png') no-repeat;
+        }
+        .next-weapon-tooltip-icon {
+            background: url('/images/icons/rightarrow.png') no-repeat;
+        }
     }
 }
