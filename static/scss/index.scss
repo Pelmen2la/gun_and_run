@@ -246,6 +246,31 @@ body {
             text-align: center;
             top: calc(50% - 1em);
         }
+
+        .top-ten-container {
+            width: 100%;
+            margin-bottom: 1em;
+
+            li {
+                max-width: 600px;
+                margin: 0 auto;
+                line-height: 1.2em;
+                * {
+                    display: inline-block;
+                }
+                .player-name {
+                    text-align: left;
+                    width: 90%;
+                    float: left;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                }
+                .player-score {
+                    float: right;
+                }
+            }
+        }
     }
 }
 
