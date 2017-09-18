@@ -3,7 +3,7 @@ var utils = require('./Utils');
 const pistol = {
         name: 'pistol',
         ammo: Infinity,
-        damage: 30,
+        damage: 20,
         bulletSpeed: 500,
         reloadTime: 500,
         bulletSize: [6, 6]
@@ -11,7 +11,7 @@ const pistol = {
     doublepistol = {
         name: 'doublepistol',
         ammo: 10,
-        damage: 30,
+        damage: 25,
         bulletSpeed: 600,
         reloadTime: 450,
         bulletSize: [6, 6],
@@ -20,7 +20,7 @@ const pistol = {
     machinegun = {
         name: 'machinegun',
         ammo: 30,
-        damage: 20,
+        damage: 25,
         bulletSpeed: 700,
         reloadTime: 200,
         bulletSize: [5, 5]
@@ -28,7 +28,7 @@ const pistol = {
     shotgun = {
         name: 'shotgun',
         ammo: 7,
-        damage: 20,
+        damage: 30,
         bulletSpeed: 900,
         reloadTime: 700,
         bulletSize: [4, 4],

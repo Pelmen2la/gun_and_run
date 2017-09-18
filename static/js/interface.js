@@ -126,16 +126,25 @@ function updatePlayerEndurancePanels(endurance) {
 function updatePlayerHpPanel(hp) {
     function getHeartHtml(isSmall) {
         var cls = isSmall ? 'small' : '';
-        return utils.stringFormat('<img class="{0}" src="{1}heart.png" />', cls, consts.ICONS_PATH);
+        return utils.stringFormat('<img class="{0} heart" src="{1}heart.png" />', cls, consts.ICONS_PATH);
     }
 
-    var hpHeartsHtml = '';
-    for(var i = 0; i < hp / 20; i++) {
-        hpHeartsHtml += getHeartHtml();
+    //flag to save old code for future
+    var isNumbers = true,
+        hpHtml = '';
+
+    if(isNumbers) {
+        hpHtml = getNumberHtml(hp, true);
+        hpHtml += getHeartHtml();
+    } else {
+        for(var i = 1; i <= Math.trunc(hp / 20); i++) {
+            hpHtml += getHeartHtml();
+        }
+        hp % 20 && (hpHtml += getHeartHtml(true));
     }
-    hp % 20 && (hpHeartsHtml += getHeartHtml(true));
-    gbId('PlayerHpBar').innerHTML = hpHeartsHtml;
+    gbId('PlayerHpBar').innerHTML = hpHtml;
 };
+window.f = updatePlayerHpPanel;
 
 function updatePlayerWeaponPanel(selectedWeaponData, showChangeWeaponTooltipIcon) {
     var panel = gbId('PlayerWeaponBar');

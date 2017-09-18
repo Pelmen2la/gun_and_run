@@ -119,7 +119,9 @@ body {
         }
 
         .hp-bar {
-            img {
+            text-align: right;
+
+            .heart {
                 padding: 0 5px;
                 height: 20px;
 
