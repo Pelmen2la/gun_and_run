@@ -8,9 +8,6 @@ const TARGET_UPDATE_TIME = 3000;
 function processBotsMoves(room) {
     var dataHelper = require('./DataHelper');
 
-    function getDistance(obj0, obj1) {
-        return Math.sqrt(Math.pow(obj0.x - obj1.x, 2) + Math.pow(obj0.y - obj1.y, 2));
-    };
     function getObjectCoordinates(obj) {
         return {
             x: Math.trunc(obj.x / map.tileSize),
@@ -34,7 +31,7 @@ function processBotsMoves(room) {
         } else if(!bot.targetCoords || (bot.lastTargetUpdate || 0) > TARGET_UPDATE_TIME) {
             var targetPlayerCoords = getObjectCoordinates(utils.getRandomArrayMember(notDeadPlayers).positionInfo);
             bot.targetCoords = targetPlayerCoords;
-            if(getDistance(bot.targetCoords, botCoords) < 4) {
+            if(utils.getDistance(bot.targetCoords, botCoords) < 4) {
                 bot.targetCoords = getObjectCoordinates(dataHelper.getMapRandomGroundTile(map));
             }
         }

@@ -182,7 +182,7 @@ function addBullets(data) {
 
 function addBulletCore(data, deviationAngle) {
     data.deviationAngle = deviationAngle || 0;
-    audio.playWeaponShot(data.weaponName);
+    playWeaponShot(data);
     gameData.bulletsGroup.add(spritesFactory.createBullet(data));
     console.log(gameData.bulletsGroup.children);
 };
@@ -192,7 +192,7 @@ function addFlamethrowerFlame(data) {
     var counter = 0,
         flameSpritesIntervalId = window.setInterval(function() {
             var flame = spritesFactory.createFlamethrowerFlame(data, counter);
-            audio.playWeaponShot(data.weaponName);
+            playWeaponShot(data);
             gameData.flameGroup.add(flame);
             counter++;
             counter == 4 && window.clearInterval(flameSpritesIntervalId);
@@ -200,6 +200,13 @@ function addFlamethrowerFlame(data) {
                 gameData.flameGroup.remove(flame);
             }, 150);
         }, 100);
+};
+
+function playWeaponShot(shootData) {
+    var distanceToBullet = utils.getDistance(shootData.positionInfo, gameData.player),
+        decrease = 1 - distanceToBullet / 512;
+    decrease < 0 && (decrease = 0);
+    audio.playWeaponShot(shootData.weaponName, decrease);
 };
 
 

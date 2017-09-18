@@ -23,8 +23,6 @@ function getRandomArrayMember(arr) {
     return arr[getRandomInt(arr.length - 1)];
 };
 
-
-
 function flipCoin() {
     return Math.random() < 0.5;
 };
@@ -41,6 +39,9 @@ function getNowTime() {
     return new Date().getTime();
 };
 
+function getDistance(obj0, obj1) {
+    return Math.sqrt(Math.pow(obj0.x - obj1.x, 2) + Math.pow(obj0.y - obj1.y, 2));
+};
 
 function stringFormat(str, args) {
     for(var i = 1; i < arguments.length; i++) {
@@ -79,6 +80,7 @@ module.exports = {
     getRandomArrayMember: getRandomArrayMember,
     flipCoin: flipCoin,
     getNowTime: getNowTime,
+    getDistance: getDistance,
     forEachEntryInObject: forEachEntryInObject,
     stringFormat: stringFormat,
     extendObject: extendObject,

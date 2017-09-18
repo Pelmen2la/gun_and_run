@@ -12,10 +12,11 @@ function loadResources() {
     });
 };
 
-function playWeaponShot(name) {
+function playWeaponShot(name, decrease) {
     if(!shotSounds[name]) {
-        shotSounds[name] = game.instance.add.audio(name, 0.1);
+        shotSounds[name] = game.instance.add.audio(name);
     }
+    shotSounds[name].volume  = 0.2 * decrease;
     shotSounds[name].play();
 };
 
