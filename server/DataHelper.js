@@ -213,15 +213,17 @@ function getNewMap(callback) {
     }
 };
 
-function getMapRandomGroundTile(map) {
+function getMapRandomGroundTile(map, notNearBorder) {
     var groundTiles = map.tiles.filter(function(tile) {
-        return tile.tileType === 'ground';
+        return tile.tileType === 'ground' && (!notNearBorder ||
+            (tile.x > map.bordersWidth + 2 * map.tileSize && tile.x < map.bordersWidth + (map.dimension.x - 2) * map.tileSize &&
+            tile.y > map.bordersWidth + 2 * map.tileSize && tile.y < map.bordersWidth + (map.dimension.y - 2) * map.tileSize));
     });
     return utils.getRandomArrayMember(groundTiles);
 };
 
 function getPlayerSpawnPosition(map) {
-    var startTile = getMapRandomGroundTile(map);
+    var startTile = getMapRandomGroundTile(map, true);
     return {x: startTile.x + map.tileSize / 2, y: startTile.y + map.tileSize / 2};
 };
 
