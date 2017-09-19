@@ -16,13 +16,13 @@ function loadResources() {
     load('ground', consts.TILES_PATH + 'ground.png', 32, 32);
     load('wall', consts.TILES_PATH + 'wall.png', 32, 32);
     load('blank', consts.TILES_PATH + 'blank.png', 1, 1);
-    load('greenportal', consts.SPRITES_PATH +'portals/green.png', 33, 52);
     load('character_circle', consts.TILES_PATH +'character_circle.png', 25, 24);
 
-    window.characterNames.forEach((n) => load(n, utils.stringFormat('{0}{1}/{2}.png', consts.SPRITES_PATH,  'characters', n), 27, 32));
+    window.gameResources.characterNames.forEach((n) => load(n, utils.stringFormat('{0}{1}/{2}.png', consts.SPRITES_PATH,  'characters', n), 27, 32));
+    window.gameResources.portalNames.forEach((n) => load(n, utils.stringFormat('{0}{1}/{2}.png', consts.SPRITES_PATH,  'portals', n), 33, 52));
 
-    for(var key in window.gameLandscapeProperties) {
-        var landscapeProps = window.gameLandscapeProperties[key];
+    for(var key in window.gameResources.landscapeProperties) {
+        var landscapeProps = window.gameResources.landscapeProperties[key];
         for(var i = 0; i < landscapeProps.groundTilesCount; i++) {
             load(getLandscapeTileName(key, 'ground', i), getLandscapeTileUrl(key, 'ground', i), 32, 32);
         }
@@ -49,7 +49,7 @@ function getFlamethrowerFlameTileName(index) {
 };
 
 function getLandscapeRandomTileName(landscapeType, tileType) {
-    var props = window.gameLandscapeProperties[landscapeType],
+    var props = window.gameResources.landscapeProperties[landscapeType],
         tilesCount = props[tileType + 'TilesCount'],
         randomTileIndex = utils.getRandomInt(tilesCount - 1),
         tileIndex = tileType == 'wall' ? randomTileIndex : (utils.getRandomInt(5) === 0 ? randomTileIndex : 0);

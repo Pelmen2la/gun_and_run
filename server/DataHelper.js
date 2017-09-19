@@ -178,6 +178,8 @@ function getNewMap(callback) {
     while(isNearBarrier(portalPos)) {
         portalPos = [utils.getRandomInt(xDimension), utils.getRandomInt(yDimension)];
     }
+    var portalData = getBaseTileData(portalPos[0], portalPos[1], 33 / 2, 55 / 2);
+    portalData.name = 'purplecircle' || utils.getRandomArrayMember(global.portalNames);
 
     function createMapCore() {
         var map = Map({
@@ -193,7 +195,7 @@ function getNewMap(callback) {
             tiles: tiles,
             enduranceItems: enduranceItems,
             weaponItems: weaponItems,
-            portal: getBaseTileData(portalPos[0], portalPos[1], 33 / 2, 55 / 2)
+            portal: portalData
         });
         map.save((err, mapData) => {
                 callback(mapData.toObject());

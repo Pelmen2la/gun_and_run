@@ -24,7 +24,7 @@ function drawMap(mapData) {
     mapData.weaponItems.forEach(function(item) {
         weaponItemsGroup.add(spritesFactory.createWeaponItem(item));
     });
-    portal = spritesFactory.createAnimatedObject({ x: mapData.portal.x, y: mapData.portal.y }, 'greenportal', 8, 5);
+    portal = spritesFactory.createAnimatedObject({ x: mapData.portal.x, y: mapData.portal.y }, mapData.portal.name, 8, 5);
 
     var worldWidth = borderW * 2 + mapData.tileSize * mapData.dimension.x,
         worldHeight = borderW * 2 + mapData.tileSize * mapData.dimension.y,

@@ -97,8 +97,11 @@
 </div>
 
 <script type="text/javascript">
-    window.gameLandscapeProperties = JSON.parse('{{GAME_LANDSCAPE_PROPERTIES}}');
-    window.characterNames = JSON.parse('{{GAME_CHARACTER_NAMES}}');
+    window.gameResources = {
+        landscapeProperties: JSON.parse('{{LANDSCAPE_PROPERTIES}}'),
+        characterNames: JSON.parse('{{CHARACTER_NAMES}}'),
+        portalNames: JSON.parse('{{PORTAL_NAMES}}')
+    };
 </script>
 <script src="/dist/js/app.js"></script>
 </body>

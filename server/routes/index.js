@@ -9,8 +9,9 @@ module.exports = function(app) {
         fs.readFile(path.join(global.appRoot, '/static/html/app.html'), 'utf8', function(err, indexPageHtml) {
             var isMobile = (new MobileDetect(req.headers['user-agent'])).mobile();
             indexPageHtml = indexPageHtml.replace('{{IS_MOBILE_CLASS}}', isMobile ? 'mobile' : '');
-            indexPageHtml = indexPageHtml.replace('{{GAME_LANDSCAPE_PROPERTIES}}', JSON.stringify(global.landscapeProperties));
-            indexPageHtml = indexPageHtml.replace('{{GAME_CHARACTER_NAMES}}', JSON.stringify(global.characterNames));
+            indexPageHtml = indexPageHtml.replace('{{LANDSCAPE_PROPERTIES}}', JSON.stringify(global.landscapeProperties));
+            indexPageHtml = indexPageHtml.replace('{{CHARACTER_NAMES}}', JSON.stringify(global.characterNames));
+            indexPageHtml = indexPageHtml.replace('{{PORTAL_NAMES}}', JSON.stringify(global.portalNames));
             res.send(indexPageHtml);
         });
     });

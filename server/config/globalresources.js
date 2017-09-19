@@ -2,14 +2,18 @@ var fs = require('fs'),
     path = require('path');
 
 const LANDSCAPE_FOLDER_PATH = path.join(global.appRoot, '/static/images/landscape/'),
+    PORTAL_SPRITES_PATH = path.join(global.appRoot, '/static/images/sprites/portals/'),
     CHARACTERS_GIF_FOLDER_PATH = path.join(global.appRoot, '/static/images/sprites/characters/gif/');
 
 module.exports = function(callback) {
     getLandscapeProperties(function(landscapeProperties) {
-        getCharacterNames(function(characterNames) {
-            global.characterNames = characterNames;
-            global.landscapeProperties = landscapeProperties;
-            callback();
+        getFileNames(CHARACTERS_GIF_FOLDER_PATH, function(characterNames) {
+            getFileNames(PORTAL_SPRITES_PATH, function(portalNames) {
+                global.landscapeProperties = landscapeProperties;
+                global.characterNames = characterNames;
+                global.portalNames = portalNames;
+                callback();
+            });
         });
     });
 };
@@ -31,9 +35,9 @@ function getLandscapeProperties(callback) {
     });
 };
 
-function getCharacterNames(callback) {
-    fs.readdir(CHARACTERS_GIF_FOLDER_PATH, (err, files) => {
-        characterNames = files.map((f) => f.split('.')[0]);
-        callback(characterNames);
+function getFileNames(path, callback) {
+    fs.readdir(path, (err, files) => {
+        var names = files.map((f) => f.split('.')[0]);
+        callback(names);
     });
 };

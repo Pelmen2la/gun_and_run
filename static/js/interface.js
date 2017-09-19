@@ -3,7 +3,7 @@ import game from './game.js';
 import consts from './consts.js';
 
 var gbId = document.getElementById.bind(document),
-    selectedCharacterIndex = utils.getRandomInt(window.characterNames.length - 1);
+    selectedCharacterIndex = utils.getRandomInt(window.gameResources.characterNames.length - 1);
 
 const DEATH_SCREEN_CLICK_TIMEOUT = 1000;
 
@@ -12,9 +12,9 @@ document.addEventListener('DOMContentLoaded', function() {
         rotateCharacter = function(isNext) {
             selectedCharacterIndex += isNext ? 1 : -1;
             if(selectedCharacterIndex < 0) {
-                selectedCharacterIndex = window.characterNames.length - 1;
+                selectedCharacterIndex = window.gameResources.characterNames.length - 1;
             }
-            if(!window.characterNames[selectedCharacterIndex]) {
+            if(!window.gameResources.characterNames[selectedCharacterIndex]) {
                 selectedCharacterIndex = 0;
             }
             updateSelectedCharacterAvatar();
@@ -100,7 +100,7 @@ function bindJoinGameFunctionToElements(fn) {
 };
 
 function getSelectedCharacterName() {
-    return window.characterNames[selectedCharacterIndex];
+    return window.gameResources.characterNames[selectedCharacterIndex];
 };
 
 function updateSelectedCharacterAvatar() {

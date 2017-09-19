@@ -32,7 +32,8 @@ var mongoose = require('mongoose'),
         }],
         portal: {
             x: Number,
-            y: Number
+            y: Number,
+            name: String
         }
     });
 
