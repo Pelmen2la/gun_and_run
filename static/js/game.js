@@ -100,6 +100,7 @@ function initGameData(data) {
     game.world.removeAll();
     map.drawMap(gameMap);
     controls.init(getControlsHandlers());
+    data.player.selectedWeaponIndex = gameData.player ? gameData.player.data.selectedWeaponIndex : 0;
     var player = spritesFactory.createPlayer(data.player, true);
     gameData = {
         map: gameMap,

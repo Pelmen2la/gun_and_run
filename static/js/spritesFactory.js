@@ -95,11 +95,11 @@ function createPlayer(data, addCircle) {
     player.data = {
         id: data.id,
         weapons: data.weapons,
-        selectedWeaponIndex: 0,
+        selectedWeaponIndex: data.selectedWeaponIndex,
         score: data.score,
         rank: data.rank,
         endurance: data.endurance,
-        lookDirection: 'up'
+        lookDirection: 'right'
     };
 
     player.animations.add('up', [0, 1, 2, 3], 10, true);
