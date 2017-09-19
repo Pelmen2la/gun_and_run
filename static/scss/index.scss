@@ -229,6 +229,13 @@ body {
             position: absolute;
             width: 100%;
             height: 100%;
+
+            .mobile-message {
+                display: none;
+            }
+            .desktop-message {
+                display: inline;
+            }
         }
 
         .mask {
@@ -275,6 +282,15 @@ body {
 }
 
 html.mobile {
+    .fullscreen .text-container {
+        .mobile-message {
+            display: inline;
+        }
+        .desktop-message {
+            display: none;
+        }
+    }
+
     .mobile-interface-container {
         display: block;
     }

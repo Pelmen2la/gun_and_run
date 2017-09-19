@@ -90,13 +90,10 @@ function addOnLoginAction(fn) {
     };
 };
 
-function addOnDeathScreenClickAction(fn) {
-    gbId('DeathScreen').addEventListener('click', fn);
-};
-
 function bindJoinGameFunctionToElements(fn) {
-    gbId('DeathScreen').addEventListener('click', fn);
-    gbId('EndRoundScreen').addEventListener('click', fn);
+    ['DeathScreen', 'EndRoundScreen'].forEach((id) => {
+        gbId(id).addEventListener('click', fn);
+    });
 };
 
 function getSelectedCharacterName() {

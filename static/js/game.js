@@ -14,6 +14,7 @@ import weapons from './../../server/Weapons.js'
 
 
 var gameData = {},
+    joinGameTimeout,
     game = new Phaser.Game('100%', '100%',
         Phaser.AUTO, document.getElementById('MainContainer'), {
             preload: preload,
@@ -33,10 +34,7 @@ function create() {
         userInterface.addOnLoginAction(function(data) {
             socket.emit('joinGame', data);
         });
-        userInterface.bindJoinGameFunctionToElements(function() {
-            window.clearInterval(gameData.sendPlayerInfoIntevalId);
-            window.setTimeout(()  => socket.emit('joinGame', {playerId: gameData.player.data.id}), 300);
-        });
+        userInterface.bindJoinGameFunctionToElements(onTryJoinGameAction);
     });
     window.setInterval(checkCollision, 50);
 };
@@ -127,6 +125,10 @@ function getControlsHandlers() {
 };
 
 function onShotButtonPress() {
+    if(gameData.player.data.isDead) {
+        onTryJoinGameAction();
+        return;
+    }
     ensurePlayerSelectedWeapon();
     var playerWeapons = gameData.player.data.weapons,
         playerWeapon = getPlayerSelectedWeapon(),
@@ -140,6 +142,14 @@ function onShotButtonPress() {
         }
         shot(playerWeapon.name);
         updatePlayerWeaponInterface();
+    }
+};
+
+function onTryJoinGameAction() {
+    if(gameData.player.data.isDead) {
+        window.clearInterval(gameData.sendPlayerInfoIntevalId);
+        window.clearTimeout(joinGameTimeout);
+        joinGameTimeout = window.setTimeout(() => socket.emit('joinGame', {playerId: gameData.player.data.id}), 300);
     }
 };
 
@@ -223,6 +233,7 @@ function getSocketHandlers() {
         userInterface.hideAllFullscreenMessages();
         updatePlayerInterface(true);
         controls.setControlsEnabled(true);
+        setPlayerIsDead(false);
         gameData.sendPlayerInfoIntevalId = window.setInterval(sendPlayerInfo, 100);
     };
 
@@ -244,6 +255,7 @@ function getSocketHandlers() {
             addShot(data);
         },
         onDeath: function() {
+            setPlayerIsDead(true);
             userInterface.setDeathScreenVisibility(true);
             disableGame();
         },
@@ -274,6 +286,7 @@ function getSocketHandlers() {
             location.reload();
         },
         onEndRound: function(data) {
+            setPlayerIsDead(true);
             userInterface.showEndRoundResult(data);
             disableGame();
         }
@@ -283,6 +296,10 @@ function getSocketHandlers() {
 function setPlayerEndurance(endurance) {
     gameData.player.data.endurance = endurance;
     userInterface.updatePlayerEndurancePanels(endurance);
+};
+
+function setPlayerIsDead(isDead) {
+    gameData.player.data.isDead = isDead;
 };
 
 function getGameSavedData(data) {

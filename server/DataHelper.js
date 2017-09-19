@@ -179,7 +179,7 @@ function getNewMap(callback) {
         portalPos = [utils.getRandomInt(xDimension), utils.getRandomInt(yDimension)];
     }
     var portalData = getBaseTileData(portalPos[0], portalPos[1], 33 / 2, 55 / 2);
-    portalData.name = 'purplecircle' || utils.getRandomArrayMember(global.portalNames);
+    portalData.name = utils.getRandomArrayMember(global.portalNames);
 
     function createMapCore() {
         var map = Map({
