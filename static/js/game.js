@@ -102,7 +102,6 @@ function initGameData(data) {
     controls.init(getControlsHandlers());
     data.player.selectedWeaponIndex = gameData.player ? gameData.player.data.selectedWeaponIndex : 0;
     var player = spritesFactory.createPlayer(data.player, true);
-    ensurePlayerSelectedWeapon();
     gameData = {
         map: gameMap,
         player: player,
@@ -114,6 +113,7 @@ function initGameData(data) {
     };
     gameData.players[player.data.id] = player;
     gameData.playersGroup.add(player);
+    ensurePlayerSelectedWeapon();
     game.camera.follow(gameData.player);
 };
 
