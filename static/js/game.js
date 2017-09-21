@@ -102,6 +102,7 @@ function initGameData(data) {
     controls.init(getControlsHandlers());
     data.player.selectedWeaponIndex = gameData.player ? gameData.player.data.selectedWeaponIndex : 0;
     var player = spritesFactory.createPlayer(data.player, true);
+    ensurePlayerSelectedWeapon();
     gameData = {
         map: gameMap,
         player: player,
@@ -126,10 +127,6 @@ function getControlsHandlers() {
 };
 
 function onShotButtonPress() {
-    if(gameData.player.data.isDead) {
-        onTryJoinGameAction();
-        return;
-    }
     ensurePlayerSelectedWeapon();
     var playerWeapons = gameData.player.data.weapons,
         playerWeapon = getPlayerSelectedWeapon(),
@@ -155,7 +152,9 @@ function onTryJoinGameAction() {
 };
 
 function onPortalButtonDown() {
-    if(gameData.allowPortalTimeoutId) {
+    if(gameData.player.data.isDead) {
+        onTryJoinGameAction();
+    } else if(gameData.allowPortalTimeoutId) {
         window.clearInterval(gameData.sendPlayerInfoIntevalId);
         socket.emit('portal', { playerId: gameData.player.data.id, roomId: gameData.roomId });
     }
@@ -257,6 +256,7 @@ function getSocketHandlers() {
         },
         onDeath: function() {
             setPlayerIsDead(true);
+            gameData.player.data.selectedWeaponIndex = 0;
             userInterface.setDeathScreenVisibility(true);
             disableGame();
         },
@@ -288,6 +288,7 @@ function getSocketHandlers() {
         },
         onEndRound: function(data) {
             setPlayerIsDead(true);
+            gameData.player.data.selectedWeaponIndex = 0;
             userInterface.showEndRoundResult(data);
             disableGame();
         }

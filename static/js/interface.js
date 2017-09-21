@@ -144,6 +144,9 @@ function updatePlayerHpPanel(hp) {
 window.f = updatePlayerHpPanel;
 
 function updatePlayerWeaponPanel(selectedWeaponData, showChangeWeaponTooltipIcon) {
+    if(!selectedWeaponData) {
+        return;
+    }
     var panel = gbId('PlayerWeaponBar');
     panel.querySelector('img').src = utils.stringFormat('{0}{1}.png', consts.WEAPONS_ICONS_PATH, selectedWeaponData.name);
     panel.querySelector('.numbers').innerHTML = selectedWeaponData.ammo == null ? '' : getNumberHtml(selectedWeaponData.ammo);

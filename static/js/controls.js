@@ -14,8 +14,8 @@ function init(handlers) {
 function initKeyboard(handlers) {
     var keyboard = game.instance.input.keyboard;
     cursors = keyboard.createCursorKeys();
-    keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = handlers.onShotButtonPress;
-    keyboard.addKey(Phaser.Keyboard.R).processKeyDown = prepareHandler(handlers.onPortalButtonDown);
+    keyboard.addKey(Phaser.Keyboard.SPACEBAR).onHoldCallback = prepareHandler(handlers.onShotButtonPress);
+    keyboard.addKey(Phaser.Keyboard.R).processKeyDown = handlers.onPortalButtonDown;
     keyboard.addKey(Phaser.Keyboard.E).processKeyDown = prepareHandler(handlers.onChangeWeaponButtonDown, [true]);
     keyboard.addKey(Phaser.Keyboard.Q).processKeyDown = prepareHandler(handlers.onChangeWeaponButtonDown, [false]);
     wKey = keyboard.addKey(Phaser.Keyboard.W);
