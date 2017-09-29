@@ -3,8 +3,10 @@ var path = require('path'),
     phaserModule = path.join(__dirname, '/node_modules/phaser/'),
     phaser = path.join(phaserModule, 'build/custom/phaser-split.js'),
     pixi = path.join(phaserModule, 'build/custom/pixi.js'),
-    p2 = path.join(phaserModule, 'build/custom/p2.js');
+    p2 = path.join(phaserModule, 'build/custom/p2.js'),
+    UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
+process.traceDeprecation = true;
 module.exports = {
     entry: {
         app: './static/js/app.js'
@@ -43,9 +45,12 @@ module.exports = {
                         }
                     }
                 ]
-            }
+            },
         ]
     },
+    plugins: process.env.arg == 'prod' ? [
+        new UglifyJSPlugin()
+    ] : [],
     resolve: {
         alias: {
             'phaser': phaser,

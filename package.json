@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "webpackwatch": "webpack --progress --colors --watch --display-error-details"
+    "watch": "webpack --progress --colors --watch --display-error-details",
+    "watchprod": "set arg=prod&&webpack --progress --colors --watch --display-error-details"
   },
   "author": "",
   "license": "ISC",
@@ -43,5 +44,8 @@
     "touch-position": "^2.0.0",
     "touches": "^1.2.2",
     "webpack": "^2.4.1"
+  },
+  "devDependencies": {
+    "uglifyjs-webpack-plugin": "^0.4.6"
   }
 }
