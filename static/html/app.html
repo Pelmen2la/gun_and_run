@@ -19,7 +19,7 @@
 
 <div id="MainContainer" class="main-container">
 
-    <div id="LoginPanel" class="login-panel">
+    <div id="LoginPanel" class="start-screen-panel">
         <h1>GUN AND RUN</h1>
 
         <div id="ContinueGameItemsContainer" class="hidden continue-game-items-container">
@@ -27,13 +27,25 @@
             <br>
             <span>or start a new game:</span>
         </div>
-    <span class="avatar-container">
-        <img id="CharacterSelectionLeftArrow" src="images/icons/leftarrow.png" class="arrow left">
-        <img id="CharacterAvatar" src="images/sprites/characters/gif/alex.gif">
-        <img id="CharacterSelectionRightArrow" src="images/icons/rightarrow.png" class="arrow right">
-    </span>
+        <span class="avatar-container">
+            <img id="CharacterSelectionLeftArrow" src="images/icons/leftarrow.png" class="arrow left">
+            <img id="CharacterAvatar" src="images/sprites/characters/gif/alex.gif">
+            <img id="CharacterSelectionRightArrow" src="images/icons/rightarrow.png" class="arrow right">
+        </span>
         <input id="LoginInput" type="text" placeholder="Nickname" class="red-text">
         <button id="StartGameButton" type="submit">PLAY</button>
+        <br>
+        <p class="controls-text">
+            Controls:<br>
+            Gun - <span class="red-text">space</span>. Run - <span class="red-text">wasd</span>.
+            Change weapon - <span class="red-text">q\e</span>. Use portal - <span class="red-text">r</span>.
+        </p>
+        <div class="footer-text">
+        <div class="email-container">
+            Feedback E-mail: <a href="mailto:gunandrunio@gmail.com">gunandrunio@gmail.com</a>
+        </div>
+        <a class="link" href="http://iogames.space/">More Games</a>
+        </div>
     </div>
 
     <div id="GameInterfaceContainer" class="hidden">
