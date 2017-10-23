@@ -131,12 +131,15 @@ function onShotButtonPress() {
     var playerWeapons = gameData.player.data.weapons,
         playerWeapon = getPlayerSelectedWeapon(),
         weaponData = weapons.getWeaponByName(playerWeapon.name);
-    if(Date.now() - (playerWeapon.lastShotTime || 0) > weaponData.reloadTime) {
-        playerWeapon.lastShotTime = Date.now();
-        playerWeapon.ammo && (playerWeapon.ammo -= 1);
-        if(playerWeapon.ammo !== null && playerWeapon.ammo <= 0) {
-            playerWeapons.splice(playerWeapons.indexOf(playerWeapon), 1);
-            ensurePlayerSelectedWeapon();
+    if(!playerWeapon.isReload) {
+        playerWeapon.isReload = true;
+        window.setTimeout(function() { playerWeapon.isReload = false; }, weaponData.reloadTime);
+        if(playerWeapon.name !== 'pistol') {
+            playerWeapon.ammo && (playerWeapon.ammo -= 1);
+            if(playerWeapon.ammo <= 0) {
+                playerWeapons.splice(playerWeapons.indexOf(playerWeapon), 1);
+                ensurePlayerSelectedWeapon();
+            }
         }
         shot(playerWeapon.name);
         updatePlayerWeaponInterface();
